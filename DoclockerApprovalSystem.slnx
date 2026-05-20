@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DocLocker.API/DocLocker.API.csproj" />
+  <Project Path="DocLocker.Web/DocLocker.Web.csproj" />
+</Solution>

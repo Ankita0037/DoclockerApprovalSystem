@@ -1,0 +1,6 @@
+@DocLocker.API_HostAddress = http://localhost:5217
+
+GET {{DocLocker.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
