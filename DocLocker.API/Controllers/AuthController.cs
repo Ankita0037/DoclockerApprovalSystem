@@ -21,7 +21,7 @@ namespace DocLocker.API.Controllers
             _config = config;
         }
 
-        // 🔷 REGISTER
+        // REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
@@ -43,7 +43,7 @@ namespace DocLocker.API.Controllers
             return Ok("User registered successfully");
         }
 
-        // 🔷 LOGIN
+        // LOGIN
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
@@ -63,7 +63,7 @@ namespace DocLocker.API.Controllers
             });
         }
 
-        // 🔑 JWT TOKEN
+        // JWT TOKEN
         private string GenerateJwtToken(User user)
         {
             var claims = new[]
