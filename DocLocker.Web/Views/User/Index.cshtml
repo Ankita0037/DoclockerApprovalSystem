@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "User Dashboard";
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4 fw-bold">User Dashboard</h2>
+
+    <div class="row">
+
+        <!-- Total Documents -->
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <h5>Total Documents</h5>
+                <h2 class="text-primary">10</h2>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <h5>Pending</h5>
+                <h2 class="text-warning">5</h2>
+            </div>
+        </div>
+
+        <!-- Approved -->
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <h5>Approved</h5>
+                <h2 class="text-success">3</h2>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-5">
+        <h4>Quick Actions</h4>
+
+        <a href="/User/Upload" class="btn btn-primary me-2">
+            Upload Document
+        </a>
+
+        <a href="/User/MyDocuments" class="btn btn-outline-primary">
+            View My Documents
+        </a>
+    </div>
+
+</div>

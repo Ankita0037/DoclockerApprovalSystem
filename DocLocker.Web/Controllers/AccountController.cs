@@ -65,10 +65,20 @@ public class AccountController : Controller
             if (result.Role == "Manager")
                 return RedirectToAction("Index", "Manager");
 
+            HttpContext.Session.SetString("Token", result.Token);
+            HttpContext.Session.SetString("Role", result.Role);
+
             return RedirectToAction("Index", "User");
         }
 
         ModelState.AddModelError("", "Invalid login attempt");
         return View(model);
+    }
+
+    //Logout
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear(); 
+        return RedirectToAction("Login");
     }
 }

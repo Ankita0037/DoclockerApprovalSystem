@@ -10,72 +10,102 @@
     <link rel="stylesheet" href="~/DocLocker.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+
+    @{
+        var role = Context.Session.GetString("Role");
+    }
+
+    <!-- ✅ NAVBAR -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
             <div class="container-lg">
-                <a class="navbar-brand fw-bold d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/DocLockerLogo.png" alt="DocLocker Logo" class="logo-img me-2" asp-append-version="true">
+
+                <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/DocLockerLogo.png" class="logo-img me-2">
                     <span class="d-none d-sm-inline">DocLocker</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+
                 <div class="navbar-collapse collapse">
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#features">Features</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" hred="#working">How It Works?</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-primary shadow btn-sm ms-2" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-primary shadow btn-sm ms-2 text-white" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
-                        </li>
+
+                        @if (string.IsNullOrEmpty(role))
+                        {
+                            <!-- BEFORE LOGIN -->
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#features">Features</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#working">How It Works?</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-outline-primary btn-sm ms-2"
+                                   asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-primary btn-sm ms-2 text-white"
+                                   asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <!-- AFTER LOGIN -->
+                            <li class="nav-item me-3 mt-2">
+                                <span class="fw-bold text-primary">@role</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-danger btn-sm"
+                                       asp-controller="Account"
+                                       asp-action="Logout">
+                                    Logout
+                                </a>
+                            </li>
+                        }
+
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <main role="main">
-        @RenderBody()
-    </main>
 
+    <!-- ✅ AFTER LOGIN → SIDEBAR + CONTENT -->
+    @if (!string.IsNullOrEmpty(role))
+    {
+        <div class="d-flex">
+
+            <!-- Sidebar Partial -->
+            <partial name="_Sidebar" />
+
+            <!-- Main Content -->
+            <div class="flex-grow-1 p-4">
+                @RenderBody()
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <!-- BEFORE LOGIN → NORMAL PAGE -->
+        <main role="main">
+            @RenderBody()
+        </main>
+    }
+
+    <!-- ✅ FOOTER -->
     <footer class="bg-dark text-light mt-5 py-4">
-        <div class="container-lg">
-            <div class="row">
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h5><i class="bi bi-file-check text-primary"></i> DocLocker</h5>
-                    <p class="text-muted">Enterprise Document Approval Workflow System</p>
-                </div>
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6>Quick Links</h6>
-                    <ul class="list-unstyled text-muted">
-                        <li><a href="#" class="text-light text-decoration-none">Features</a></li>
-                        <li><a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-light text-decoration-none">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h6>Contact</h6>
-                    <p class="text-muted">Email: info@doclocker.com</p>
-                </div>
-            </div>
-            <hr class="bg-secondary mt-4">
-            <div class="text-center text-muted">
-                <small>&copy; 2026 DocLocker. All rights reserved.</small>
-            </div>
+        <div class="container-lg text-center">
+            <small>&copy; 2026 DocLocker. All rights reserved.</small>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
 

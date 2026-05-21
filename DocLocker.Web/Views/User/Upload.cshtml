@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Upload Document";
+}
+
+@if (TempData["Success"] != null)
+    @if (TempData["Success"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+            <div class="toast show align-items-center text-white bg-success border-0">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @TempData["Success"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+<div class="container">
+
+    <h2 class="mb-4 fw-bold">Upload Document</h2>
+
+    <div class="card p-4 shadow-sm">
+
+        <form method="post" enctype="multipart/form-data" action="/User/Upload">
+            
+            @Html.AntiForgeryToken()
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label">Document Title</label>
+                <input type="text" name="title" class="form-control" />
+                <span class="text-danger">
+                    @Html.ValidationMessage("title")
+                </span>
+            </div>
+
+            <!-- File -->
+            <div class="mb-3">
+                <label class="form-label">Select File</label>
+                <input type="file" name="file" class="form-control" />
+                <span class="text-danger">
+                    @Html.ValidationMessage("title")
+                </span>
+            </div>
+
+            <!-- Button -->
+            <button type="submit" class="btn btn-primary">
+                Upload
+            </button>
+
+        </form>
+
+    </div>
+</div>

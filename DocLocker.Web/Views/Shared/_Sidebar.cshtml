@@ -1,0 +1,29 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="bg-dark text-white p-3" style="width:250px; min-height:100vh;">
+    
+    <h4>DocLocker</h4>
+    <hr />
+
+    @if (Context.Session.GetString("Role") == "User")
+    {
+        <a href="/User/Index" class="d-block text-white mb-2">Dashboard</a>
+        <a href="/User/Upload" class="d-block text-white mb-2">Upload Document</a>
+        <a href="/User/MyDocuments" class="d-block text-white mb-2">My Documents</a>
+    }
+
+    @if (Context.Session.GetString("Role") == "Manager")
+    {
+        <a href="/Manager/Index" class="d-block text-white mb-2">Dashboard</a>
+        <a href="/Manager/Pending" class="d-block text-white mb-2">Pending Approvals</a>
+    }
+
+    @if (Context.Session.GetString("Role") == "Admin")
+    {
+        <a href="/Admin/Index" class="d-block text-white mb-2">Dashboard</a>
+    }
+
+</div>
