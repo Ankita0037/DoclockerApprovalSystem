@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,23 +9,20 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DocLocker.Web.styles.css" asp-append-version="true" />
 </head>
+@{
+    var role = Context.Session.GetString("Role");
+}
 <body>
-
-    @{
-        var role = Context.Session.GetString("Role");
-    }
-
-    <!-- ✅ NAVBAR -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
             <div class="container-lg">
-
                 <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-file-lock2 me-2"></i>
+                    <img src="~/images/DocLockerLogo.png" alt="DocLocker Logo" class="logo-img me-2" asp-append-version="true">
                     <span class="d-none d-sm-inline">DocLocker</span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav"
+                        aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -33,7 +30,6 @@
                     <ul class="navbar-nav ms-auto">
                         @if (string.IsNullOrEmpty(role))
                         {
-                            <!-- BEFORE LOGIN -->
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
@@ -54,7 +50,6 @@
                         }
                         else
                         {
-                            <!-- AFTER LOGIN -->
                             <li class="nav-item me-3 mt-2">
                                 <span class="fw-bold text-primary">
                                     <i class="bi bi-person-circle me-1"></i>@role
@@ -74,16 +69,12 @@
         </nav>
     </header>
 
-    <!-- ✅ AFTER LOGIN → SIDEBAR + CONTENT -->
     @if (!string.IsNullOrEmpty(role))
     {
         <div class="d-flex" style="min-height: calc(100vh - 80px);">
-            <!-- Sidebar Partial -->
             <partial name="_Sidebar" />
 
-            <!-- Main Content -->
             <div class="flex-grow-1 p-3 p-lg-4">
-                <!-- Success Message -->
                 @if (TempData["Success"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -99,7 +90,6 @@
     }
     else
     {
-        <!-- BEFORE LOGIN → NORMAL PAGE -->
         <main role="main">
             @if (TempData["Success"] != null)
             {
@@ -113,7 +103,6 @@
         </main>
     }
 
-    <!-- ✅ FOOTER -->
     <footer class="bg-dark text-light py-4">
         <div class="container-lg text-center">
             <small>&copy; 2026 DocLocker. All rights reserved.</small>
@@ -122,10 +111,9 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
-
 </body>
 </html>
 
