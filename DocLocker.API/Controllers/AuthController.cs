@@ -33,7 +33,7 @@ namespace DocLocker.API.Controllers
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
-                Role = dto.Role,
+                Role = "User",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
@@ -80,7 +80,9 @@ namespace DocLocker.API.Controllers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                expires: DateTime.Now.AddHours(1),
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                expires: DateTime.UtcNow.AddHours(1),
                 claims: claims,
                 signingCredentials: creds
             );

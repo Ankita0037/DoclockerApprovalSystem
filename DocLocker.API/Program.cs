@@ -6,6 +6,20 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+{
+    throw new InvalidOperationException("Jwt:Key must be configured and at least 32 characters long.");
+}
+
+if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
+{
+    throw new InvalidOperationException("Jwt:Issuer and Jwt:Audience must be configured.");
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -21,12 +35,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                Encoding.UTF8.GetBytes(jwtKey)
             )
         };
     });
@@ -36,7 +52,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7260", "http://localhost:5173")
+        policy.WithOrigins(
+                  "https://localhost:7290",
+                  "http://localhost:5297",
+                  "https://localhost:7260",
+                  "http://localhost:5173")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

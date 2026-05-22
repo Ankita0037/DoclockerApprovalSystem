@@ -17,14 +17,15 @@ namespace DocLocker.Core.Models
         public string PhoneNumber { get; set; }
 
         [Required]
-        [MinLength(6)]
+        [RegularExpression(
+            @"^(?=.*[A-Z])(?=.*\d).{8,}$",
+            ErrorMessage = "Password must be at least 8 characters and include 1 uppercase letter and 1 number")]
         public string Password { get; set; }
 
         [Required]
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
 
-        [Required]
-        public string Role { get; set; } // User / Manager
+        public string Role { get; set; } = "User";
     }
 }

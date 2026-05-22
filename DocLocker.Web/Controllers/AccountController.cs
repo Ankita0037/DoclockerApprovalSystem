@@ -36,6 +36,8 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterDTO model)
     {
+        model.Role = "User";
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -135,5 +137,10 @@ public class AccountController : Controller
         HttpContext.Session.Clear();
         TempData["Success"] = "You have been logged out successfully.";
         return RedirectToAction("Index", "Home");
+    }
+
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 }

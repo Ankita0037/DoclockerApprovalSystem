@@ -75,21 +75,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label for="role" class="form-label">
-                                    <i class="bi bi-shield-check me-2"></i>Role
-                                </label>
-                                <select asp-for="Role" class="form-select" id="role" required>
-                                    <option value="">Select your role</option>
-                                    <option value="User">
-                                        <i class="bi bi-person"></i> User - Upload and submit documents
-                                    </option>
-                                    <option value="Manager">
-                                        <i class="bi bi-person-check"></i> Manager - Review and approve documents
-                                    </option>
-                                </select>
-                                <span asp-validation-for="Role" class="invalid-feedback"></span>
-                            </div>
+                            <input asp-for="Role" type="hidden" value="User" />
 
                             <div class="form-check mb-4">
                                 <input class="form-check-input" type="checkbox" id="terms" required>
@@ -127,5 +113,3 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-    </div>
-</div>

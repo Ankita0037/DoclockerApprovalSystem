@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using DocLocker.Web.Filters;
 
 namespace DocLocker.Web.Controllers
 {
+    [SessionAuthorize("Admin")]
     public class AdminController : Controller
     {
         private readonly HttpClient _httpClient;
@@ -13,25 +15,8 @@ namespace DocLocker.Web.Controllers
             _logger = logger;
         }
 
-        private void CheckAuthorization()
-        {
-            var role = HttpContext.Session.GetString("Role");
-            if (string.IsNullOrEmpty(role) || role != "Admin")
-            {
-                throw new UnauthorizedAccessException("Access denied. Admin role required.");
-            }
-        }
-
         public IActionResult Index()
         {
-            try
-            {
-                CheckAuthorization();
-            }
-            catch
-            {
-                return RedirectToAction("Login", "Account");
-            }
             return View();
         }
     }

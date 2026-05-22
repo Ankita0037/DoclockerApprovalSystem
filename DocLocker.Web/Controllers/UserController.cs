@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
+using DocLocker.Web.Filters;
 
 namespace DocLocker.Web.Controllers
 {
+    [SessionAuthorize("User")]
     public class UserController : Controller
     {
         private readonly HttpClient _httpClient;
@@ -24,40 +26,25 @@ namespace DocLocker.Web.Controllers
             var token = GetAuthToken();
             if (!string.IsNullOrEmpty(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
             }
         }
 
         public IActionResult Index()
         {
-            // Check if user is logged in
-            var token = GetAuthToken();
-            if (string.IsNullOrEmpty(token))
-                return RedirectToAction("Login", "Account");
-
             return View();
         }
 
-        // GET
         public IActionResult Upload()
         {
-            var token = GetAuthToken();
-            if (string.IsNullOrEmpty(token))
-                return RedirectToAction("Login", "Account");
-
             return View();
         }
 
-        // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(IFormFile file, [FromForm] string title)
         {
-            var token = GetAuthToken();
-            if (string.IsNullOrEmpty(token))
-                return RedirectToAction("Login", "Account");
-
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError("file", "Please select a file to upload");
@@ -111,10 +98,6 @@ namespace DocLocker.Web.Controllers
 
         public IActionResult MyDocuments()
         {
-            var token = GetAuthToken();
-            if (string.IsNullOrEmpty(token))
-                return RedirectToAction("Login", "Account");
-
             return View();
         }
     }
