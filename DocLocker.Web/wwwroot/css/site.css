@@ -1,13 +1,18 @@
 /* Global Styles */
 :root {
-    --primary-color: #0d6efd;
+    --primary-color: #0D2B6C;
+    --primary-light: #0085CA;
+    --primary-dark: #051D47;
     --secondary-color: #6c757d;
-    --success-color: #198754;
+    --success-color: #1EB854;
     --danger-color: #dc3545;
     --warning-color: #ffc107;
     --info-color: #0dcaf0;
-    --light-color: #f8f9fa;
+    --light-color: #E8F2F8;
+    --light-accent: #F0F6FA;
     --dark-color: #212529;
+    --text-dark: #1A1A1A;
+    --text-muted: #616161;
 }
 
 html {
@@ -17,7 +22,7 @@ html {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    color: #333;
+    color: var(--text-dark);
     background-color: #f8f9fa;
 }
 
@@ -40,6 +45,58 @@ body {
 
 .nav-link:hover {
     color: var(--primary-color) !important;
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    width: 250px;
+    min-height: 100vh;
+    background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    box-shadow: 2px 0 14px rgba(5, 29, 71, 0.16);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-nav-link {
+    color: rgba(255, 255, 255, 0.84);
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    font-weight: 600;
+    line-height: 1.25;
+    padding: 0.75rem 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-nav-link i {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 1.05rem;
+    transition: color 0.2s ease;
+}
+
+.sidebar-nav-link:hover,
+.sidebar-nav-link:focus {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-nav-link:hover i,
+.sidebar-nav-link:focus i,
+.sidebar-nav-link.active i {
+    color: #fff;
+}
+
+.sidebar-nav-link.active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary-light) 0%, #0A6EA8 100%);
+    box-shadow: 0 8px 18px rgba(0, 133, 202, 0.28);
+}
+
+.sidebar-user {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.72);
 }
 
 /* Logo Styling */
