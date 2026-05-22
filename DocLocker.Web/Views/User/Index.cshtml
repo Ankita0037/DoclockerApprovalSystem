@@ -2,59 +2,102 @@
     ViewData["Title"] = "User Dashboard";
 }
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger">
-        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-        {
-            <div>@error.ErrorMessage</div>
-        }
-    </div>
-}
-
 <div class="container-fluid">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+    </h2>
 
-    <h2 class="mb-4 fw-bold">User Dashboard</h2>
-
-    <div class="row">
-
-        <!-- Total Documents -->
+    <!-- Stats Row -->
+    <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm p-3 text-center">
-                <h5>Total Documents</h5>
-                <h2 class="text-primary">10</h2>
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark" style="font-size: 2rem; color: #007bff;"></i>
+                    <h5 class="mt-3">Total Documents</h5>
+                    <h2 class="text-primary">0</h2>
+                    <small class="text-muted">Uploaded by you</small>
+                </div>
             </div>
         </div>
 
-        <!-- Pending -->
         <div class="col-md-4">
-            <div class="card shadow-sm p-3 text-center">
-                <h5>Pending</h5>
-                <h2 class="text-warning">5</h2>
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split" style="font-size: 2rem; color: #ffc107;"></i>
+                    <h5 class="mt-3">Pending</h5>
+                    <h2 class="text-warning">0</h2>
+                    <small class="text-muted">Awaiting approval</small>
+                </div>
             </div>
         </div>
 
-        <!-- Approved -->
         <div class="col-md-4">
-            <div class="card shadow-sm p-3 text-center">
-                <h5>Approved</h5>
-                <h2 class="text-success">3</h2>
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle" style="font-size: 2rem; color: #28a745;"></i>
+                    <h5 class="mt-3">Approved</h5>
+                    <h2 class="text-success">0</h2>
+                    <small class="text-muted">Successfully approved</small>
+                </div>
             </div>
         </div>
-
     </div>
 
     <!-- Quick Actions -->
-    <div class="mt-5">
-        <h4>Quick Actions</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="/User/Upload" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>Upload New Document
+                    </a>
+                    <a href="/User/MyDocuments" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark me-2"></i>View My Documents
+                    </a>
+                </div>
+            </div>
+        </div>
 
-        <a href="/User/Upload" class="btn btn-primary me-2">
-            Upload Document
-        </a>
-
-        <a href="/User/MyDocuments" class="btn btn-outline-primary">
-            View My Documents
-        </a>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Getting Started
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>Upload your documents</li>
+                        <li>Wait for manager review</li>
+                        <li>Receive approval or feedback</li>
+                        <li>Download approved documents</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No recent activity. Upload a document to get started!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

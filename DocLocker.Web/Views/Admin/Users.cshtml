@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-people me-2"></i>Manage Users
+    </h2>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list me-2"></i>User List
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-light text-dark">0 Users</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filter and Search -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search users..." id="searchInput">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="User">User</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <!-- Users will be loaded here via API -->
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox me-2"></i>No users found.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder: This will be replaced with actual API calls
+        document.addEventListener('DOMContentLoaded', function () {
+            // TODO: Load users from /api/admin/users endpoint
+            console.log('Users management view loaded. API integration pending.');
+        });
+
+        // Search filter
+        document.getElementById('searchInput')?.addEventListener('keyup', function (e) {
+            // TODO: Implement search functionality
+        });
+
+        // Role filter
+        document.getElementById('roleFilter')?.addEventListener('change', function (e) {
+            // TODO: Implement role filter
+        });
+    </script>
+}

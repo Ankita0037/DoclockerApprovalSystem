@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using DocLocker.API.Data;
 using DocLocker.Core.Models;
+using System.Security.Claims;
 
 namespace DocLocker.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DocumentController : ControllerBase
     {
         private readonly DocLockerDbContext _context;
@@ -20,6 +23,14 @@ namespace DocLocker.API.Controllers
         {
             if (model.File == null || model.File.Length == 0)
                 return BadRequest("File is missing");
+
+            if (string.IsNullOrWhiteSpace(model.Title))
+                return BadRequest("Title is required");
+
+            // Get current user ID from JWT token
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("User ID not found in token");
 
             var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
 
@@ -39,13 +50,13 @@ namespace DocLocker.API.Controllers
                 Title = model.Title,
                 FilePath = fileName,
                 Status = "Pending",
-                UploadedByUserId = 1
+                UploadedByUserId = userId
             };
 
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
 
-            return Ok("Document uploaded successfully");
+            return Ok(new { message = "Document uploaded successfully", documentId = document.Id });
         }
     }
 }
