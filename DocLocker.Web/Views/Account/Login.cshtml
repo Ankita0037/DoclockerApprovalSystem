@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Login - DocLocker";
+}
+
+@model DocLocker.Core.Models.LoginDTO
+
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card auth-card">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <img src="~/images/DocLockerLogo.png" alt="DocLocker Logo" class="logo-img me-2" asp-append-version="true">
+                            <h1 class="auth-title">DocLocker</h1>
+                            <p class="auth-subtitle">Sign in to your account</p>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                <strong>Login Failed</strong>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <div>@error.ErrorMessage</div>
+                                }
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <form asp-action="Login" method="post" class="needs-validation">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-2"></i>Email Address
+                                </label>
+                                <input asp-for="Email" type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                                <span asp-validation-for="Email" class="invalid-feedback"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label">
+                                    <i class="bi bi-lock me-2"></i>Password
+                                </label>
+                                <input asp-for="Password" type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                                <span asp-validation-for="Password" class="invalid-feedback"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                            </button>
+                        </form>
+
+                        <hr class="my-3">
+
+                        <div class="text-center">
+                            <p class="mb-0">Don't have an account? 
+                                <a asp-action="Register" class="auth-link">Register here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Your data is secure and encrypted
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,8 +1,232 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Document Approval Workflow System";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container-lg">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title">Document Approval Workflow System</h1>
+                <p class="hero-subtitle">Streamline your document approval process with intelligent workflow management</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="@Url.Action("Register", "Account")" class="btn btn-light btn-lg">
+                        <i class="bi bi-pencil-square me-2"></i>Get Started
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-arrow-down me-2"></i>Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="text-center">
+                    <img src="~/images/DocLockerHomeImage.png" alt="DocLocker Logo" class="logo-img me-2 h-100 w-100" asp-append-version="true">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+    <div class="container-lg">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Powerful Features</h2>
+            <p class="lead text-muted">Everything you need to manage documents and approvals efficiently</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="feature-title">Easy Upload</h3>
+                    <p class="feature-text">Upload documents with drag-and-drop functionality. Support for multiple file formats and secure storage.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <h3 class="feature-title">Smart Workflow</h3>
+                    <p class="feature-text">Automated approval workflows with customizable routing. Set up multi-level approvals based on roles and rules.</p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 class="feature-title">Role-Based Access</h3>
+                    <p class="feature-text">Admin, Manager, and User roles with granular permission controls. Ensure sensitive documents are protected.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <h3 class="feature-title">Approve/Reject</h3>
+                    <p class="feature-text">Quick approval or rejection actions. Request revisions with detailed comments for document improvements.</p>
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <h3 class="feature-title">Advanced Search</h3>
+                    <p class="feature-text">Powerful search capabilities with filters. Find documents by name, date, status, or approver instantly.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h3 class="feature-title">Audit Trail</h3>
+                    <p class="feature-text">Complete history tracking. Monitor approval timelines and document status changes for full transparency.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Workflow Steps -->
+<section id="working" class="py-80" style="background-color: #f8f9fa; padding: 80px 0;">
+    <div class="container-lg">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+            <p class="lead text-muted">Simple 4-step process to manage your documents</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="text-center">
+                    <div class="card-icon bg-primary text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                    </div>
+                    <h4 class="fw-bold mt-3">1. Upload</h4>
+                    <p class="text-muted">Upload your document to the system</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="text-center">
+                    <div class="card-icon bg-info text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-send"></i>
+                    </div>
+                    <h4 class="fw-bold mt-3">2. Submit</h4>
+                    <p class="text-muted">Send for approval to the right person</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="text-center">
+                    <div class="card-icon bg-warning text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h4 class="fw-bold mt-3">3. Review</h4>
+                    <p class="text-muted">Approver reviews and examines the document</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="text-center">
+                    <div class="card-icon bg-success text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <h4 class="fw-bold mt-3">4. Approve</h4>
+                    <p class="text-muted">Document approved or request revision</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Key Benefits -->
+<section class="py-80" style="padding: 80px 0;">
+    <div class="container-lg">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2 class="display-5 fw-bold mb-4">Why Choose DocLocker?</h2>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="bi bi-check-circle text-success me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Secure & Compliant</h5>
+                                <p class="text-muted">Enterprise-grade security with full audit trails and compliance reporting</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="bi bi-check-circle text-success me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Time Saving</h5>
+                                <p class="text-muted">Reduce approval cycle time by 70% with automated workflows</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="bi bi-check-circle text-success me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">User Friendly</h5>
+                                <p class="text-muted">Intuitive interface requires minimal training for all users</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="bi bi-check-circle text-success me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">24/7 Support</h5>
+                                <p class="text-muted">Round-the-clock customer support and regular system updates</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="bg-primary bg-opacity-10 rounded p-4" style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center;">
+                            <img src="~/images/DockelockerHomePgaeImage.png" alt="DocLocker Logo" class="logo-img me-2 h-100 w-100" asp-append-version="true">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container-lg">
+        <h2 class="cta-title">Ready to Transform Your Approval Process?</h2>
+        <p class="lead mb-4" style="font-size: 1.2rem;">Join thousands of organizations using DocLocker for efficient document approvals</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="@Url.Action("Register", "Account")" class="btn btn-light btn-lg">
+                <i class="bi bi-pencil-square me-2"></i>Create Account
+            </a>
+            <a href="@Url.Action("Login", "Account")" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,104 @@
+﻿@{
+    ViewData["Title"] = "Upload Document";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-4 fw-bold">
+                <i class="bi bi-cloud-arrow-up me-2"></i>Upload Document
+            </h2>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <strong>Upload Failed</strong>
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@error.ErrorMessage</div>
+                            }
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form method="post" enctype="multipart/form-data" asp-action="Upload">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Title -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-pencil-square me-2"></i>Document Title
+                            </label>
+                            <input type="text" name="title" class="form-control form-control-lg" 
+                                   placeholder="Enter document title" required>
+                            <span class="text-danger">@Html.ValidationMessage("title")</span>
+                            <small class="text-muted d-block mt-2">Give your document a meaningful name</small>
+                        </div>
+
+                        <!-- File -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-earmark me-2"></i>Select File
+                            </label>
+                            <div class="input-group mb-3">
+                                <input type="file" name="file" class="form-control form-control-lg" 
+                                       id="fileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.png,.jpg,.jpeg" required>
+                            </div>
+                            <span class="text-danger">@Html.ValidationMessage("file")</span>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Supported formats: PDF, DOC, DOCX, XLSX, XLS, TXT, PNG, JPG, JPEG (Max 10MB)
+                            </small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>Upload Document
+                            </button>
+                            <a href="/User/Index" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-lightbulb me-2 text-warning"></i>Tips
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Use clear, descriptive titles</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Ensure file is not corrupted</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Keep file size under 10MB</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Review before submitting</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Pending Approvals";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-clock-history me-2"></i>Pending Approvals
+    </h2>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="bi bi-hourglass-split me-2"></i>Documents Awaiting Your Review
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-dark">0 Pending</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filter and Search -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search documents..." id="searchInput">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="priorityFilter">
+                        <option value="">All Priority</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Approvals Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Document</th>
+                            <th>Submitted By</th>
+                            <th>Submitted On</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalsTable">
+                        <!-- Approvals will be loaded here via API -->
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-check-circle me-2"></i>All caught up! No pending approvals.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5" style="display: none;">
+        <i class="bi bi-check-circle" style="font-size: 3rem; color: #28a745;"></i>
+        <p class="text-muted mt-3">No pending documents to review</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder: This will be replaced with actual API calls
+        document.addEventListener('DOMContentLoaded', function () {
+            // TODO: Load pending documents from /api/document/pending endpoint
+            console.log('Pending Approvals view loaded. API integration pending.');
+        });
+
+        // Search filter
+        document.getElementById('searchInput')?.addEventListener('keyup', function (e) {
+            // TODO: Implement search functionality
+        });
+
+        // Priority filter
+        document.getElementById('priorityFilter')?.addEventListener('change', function (e) {
+            // TODO: Implement priority filter
+        });
+    </script>
+}
