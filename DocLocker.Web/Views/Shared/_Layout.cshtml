@@ -11,10 +11,13 @@
 </head>
 @{
     var role = Context.Session.GetString("Role");
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+    var showFooter = currentController == "Home" && currentAction == "Index";
 }
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm fixed-top">
             <div class="container-lg">
                 <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
                     <img src="~/images/DocLockerLogo.png" alt="DocLocker Logo" class="logo-img me-2" asp-append-version="true">
@@ -44,7 +47,7 @@
                                    asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                             <li class="nav-item">
-                               <a class="nav-link btn btn-primary btn-sm ms-2 mt-2 mt-lg-0" style="color: #fff;"
+                                <a class="nav-link btn btn-primary btn-sm ms-2 mt-2 mt-lg-0"
                                    asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                         }
@@ -71,10 +74,10 @@
 
     @if (!string.IsNullOrEmpty(role))
     {
-        <div class="d-flex" style="min-height: calc(100vh - 80px);">
+        <div class="d-flex app-shell" style="min-height: calc(100vh - 80px);">
             <partial name="_Sidebar" />
 
-            <div class="flex-grow-1 p-3 p-lg-4">
+            <div class="flex-grow-1 p-3 p-lg-4 app-content">
                 @if (TempData["Success"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -103,11 +106,14 @@
         </main>
     }
 
-    <footer class="bg-dark text-light py-4">
-        <div class="container-lg text-center">
-            <small>&copy; 2026 DocLocker. All rights reserved.</small>
-        </div>
-    </footer>
+    @if (showFooter)
+    {
+        <footer class="bg-dark text-light py-4">
+            <div class="container-lg text-center">
+                <small>&copy; 2026 DocLocker. All rights reserved.</small>
+            </div>
+        </footer>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
