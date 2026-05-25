@@ -37,5 +37,10 @@ namespace DocLocker.API.Services
 
             return await _documentRepository.AddAsync(document);
         }
+
+        public async Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId)
+        {
+            return await _documentRepository.GetByUserIdAsync(userId);
+        }
     }
 }

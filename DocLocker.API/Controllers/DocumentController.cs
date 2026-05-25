@@ -36,5 +36,12 @@ namespace DocLocker.API.Controllers
 
             return Ok(new { message = "Document uploaded successfully", documentId });
         }
+
+        [HttpGet("user/{userId:int}")]
+        public async Task<IActionResult> GetByUser(int userId)
+        {
+            var documents = await _documentService.GetByUserIdAsync(userId);
+            return Ok(documents);
+        }
     }
 }

@@ -5,5 +5,6 @@ namespace DocLocker.API.Services
     public interface IDocumentService
     {
         Task<int> UploadAsync(UploadDocumentDTO model, int userId);
+        Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId);
     }
 }
