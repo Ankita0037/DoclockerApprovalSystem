@@ -29,7 +29,7 @@ namespace DocLocker.API.Services
 
             var document = new Document
             {
-                Title = model.Title,
+                FileName = model.FileName,
                 FilePath = fileName,
                 Status = "Pending",
                 UploadedByUserId = userId

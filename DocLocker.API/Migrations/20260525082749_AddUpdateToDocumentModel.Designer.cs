@@ -4,6 +4,7 @@ using DocLocker.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocLocker.API.Migrations
 {
     [DbContext(typeof(DocLockerDbContext))]
-    partial class DocLockerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525082749_AddUpdateToDocumentModel")]
+    partial class AddUpdateToDocumentModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

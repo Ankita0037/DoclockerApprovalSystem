@@ -17,7 +17,7 @@ namespace DocLocker.API.Repositories
         {
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
-            return document.Id;
+            return document.DocumentId;
         }
     }
 }

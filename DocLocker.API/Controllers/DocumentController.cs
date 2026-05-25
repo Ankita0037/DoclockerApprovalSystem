@@ -24,8 +24,8 @@ namespace DocLocker.API.Controllers
             if (model.File == null || model.File.Length == 0)
                 return BadRequest("File is missing");
 
-            if (string.IsNullOrWhiteSpace(model.Title))
-                return BadRequest("Title is required");
+            if (string.IsNullOrWhiteSpace(model.FileName))
+                return BadRequest("File name is required");
 
             // Get current user ID from JWT token
             var userIdClaim = User.FindFirst("UserId")?.Value;
