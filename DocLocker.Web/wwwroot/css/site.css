@@ -43,6 +43,10 @@ body {
     color: #495057 !important;
 }
 
+.navbar .nav-link.btn.btn-primary {
+    color: #fff !important;
+}
+
 .nav-link:hover {
     color: var(--primary-color) !important;
 }
