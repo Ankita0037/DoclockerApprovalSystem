@@ -38,6 +38,9 @@
                 <a href="/User/MyDocuments?status=Pending" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "User" && statusFilter == "Pending" ? "active" : "") mb-2">
                     Pending
                 </a>
+                <a href="/User/MyDocuments?status=RevisionRequested" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "User" && statusFilter == "RevisionRequested" ? "active" : "") mb-2">
+                    Revision Requested
+                </a>
                 <a href="/User/MyDocuments?status=Approved" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "User" && statusFilter == "Approved" ? "active" : "") mb-2">
                     Approved
                 </a>
