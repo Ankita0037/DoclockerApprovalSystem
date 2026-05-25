@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using DocLocker.API.Data;
+using DocLocker.API.Services;
 using DocLocker.Core.Models;
 using System.Security.Claims;
 
@@ -11,11 +11,11 @@ namespace DocLocker.API.Controllers
     [Authorize]
     public class DocumentController : ControllerBase
     {
-        private readonly DocLockerDbContext _context;
+        private readonly IDocumentService _documentService;
 
-        public DocumentController(DocLockerDbContext context)
+        public DocumentController(IDocumentService documentService)
         {
-            _context = context;
+            _documentService = documentService;
         }
 
         [HttpPost("upload")]
@@ -32,31 +32,9 @@ namespace DocLocker.API.Controllers
             if (!int.TryParse(userIdClaim, out int userId))
                 return Unauthorized("User ID not found in token");
 
-            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+            var documentId = await _documentService.UploadAsync(model, userId);
 
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
-
-            var fileName = Guid.NewGuid() + Path.GetExtension(model.File.FileName);
-            var filePath = Path.Combine(folderPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await model.File.CopyToAsync(stream);
-            }
-
-            var document = new Document
-            {
-                Title = model.Title,
-                FilePath = fileName,
-                Status = "Pending",
-                UploadedByUserId = userId
-            };
-
-            _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Document uploaded successfully", documentId = document.Id });
+            return Ok(new { message = "Document uploaded successfully", documentId });
         }
     }
 }
