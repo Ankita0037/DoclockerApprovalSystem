@@ -28,12 +28,16 @@ namespace DocLocker.API.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
                 return BadRequest("Email already exists");
 
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == dto.RoleId);
+            if (role == null)
+                return BadRequest("Invalid role");
+
             var user = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
-                Role = "User",
+                RoleId = role.RoleId,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
@@ -47,7 +51,9 @@ namespace DocLocker.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return Unauthorized("Invalid credentials");
@@ -59,17 +65,19 @@ namespace DocLocker.API.Controllers
                 Token = token,
                 FullName = user.FullName,
                 Email = user.Email,
-                Role = user.Role
+                RoleId = user.RoleId,
+                RoleName = user.Role?.Name
             });
         }
 
         // JWT TOKEN
         private string GenerateJwtToken(User user)
         {
+            var roleName = user.Role?.Name ?? string.Empty;
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, roleName),
                 new Claim("UserId", user.UserId.ToString())
             };
 

@@ -13,7 +13,7 @@ namespace DocLocker.Core.Models
         public string Email { get; set; }
 
         [Required]
-        [RegularExpression(@"^[0-9]{10}$")]
+        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone must be 10 digits")]
         public string PhoneNumber { get; set; }
 
         [Required]
@@ -26,6 +26,6 @@ namespace DocLocker.Core.Models
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
 
-        public string Role { get; set; } = "User";
+        public int RoleId { get; set; } = 3;
     }
 }

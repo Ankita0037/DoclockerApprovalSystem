@@ -22,8 +22,19 @@ namespace DocLocker.Core.Models
         public string PasswordHash { get; set; }
 
         [Required]
-        public string Role { get; set; } 
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public ICollection<Project> CreatedProjects { get; set; } = new List<Project>();
+        public ICollection<ProjectManager> ProjectManagers { get; set; } = new List<ProjectManager>();
+        public ICollection<ProjectMember> ProjectMembers { get; set; } = new List<ProjectMember>();
+        public ICollection<DocumentRequest> MemberDocumentRequests { get; set; } = new List<DocumentRequest>();
+        public ICollection<DocumentRequest> ManagerDocumentRequests { get; set; } = new List<DocumentRequest>();
+        public ICollection<Document> UploadedDocuments { get; set; } = new List<Document>();
+        public ICollection<DocumentReview> Reviews { get; set; } = new List<DocumentReview>();
     }
 }

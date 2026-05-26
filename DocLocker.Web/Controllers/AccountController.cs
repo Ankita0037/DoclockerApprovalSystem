@@ -36,7 +36,7 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterDTO model)
     {
-        model.Role = "User";
+        model.RoleId = 3;
 
         if (!ModelState.IsValid)
             return View(model);
@@ -103,7 +103,7 @@ public class AccountController : Controller
 
                 // Store in session
                 HttpContext.Session.SetString("Token", result.Token);
-                HttpContext.Session.SetString("Role", result.Role);
+                HttpContext.Session.SetString("Role", result.RoleName ?? string.Empty);
                 HttpContext.Session.SetString("FullName", result.FullName);
                 HttpContext.Session.SetString("Email", result.Email);
                 if (!string.IsNullOrEmpty(userIdClaim))
@@ -112,7 +112,7 @@ public class AccountController : Controller
                 }
 
                 // Role-based redirect
-                return result.Role switch
+                return result.RoleName switch
                 {
                     "Admin" => RedirectToAction("Index", "Admin"),
                     "Manager" => RedirectToAction("Index", "Manager"),

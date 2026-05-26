@@ -43,30 +43,30 @@ namespace DocLocker.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(IFormFile file, [FromForm] string title)
+        public async Task<IActionResult> Upload(IFormFile file, [FromForm] string fileName)
         {
             if (file == null || file.Length == 0)
             {
-                ModelState.AddModelError("file", "Please select a file to upload");
+                ModelState.AddModelError("File", "Please select a file to upload");
                 return View();
             }
 
-            if (string.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(fileName))
             {
-                ModelState.AddModelError("title", "Document title is required");
+                ModelState.AddModelError("FileName", "Document title is required");
                 return View();
             }
 
             try
             {
                 var content = new MultipartFormDataContent();
-                content.Add(new StringContent(title), "title");
+                content.Add(new StringContent(fileName), "FileName");
 
                 var fileContent = new StreamContent(file.OpenReadStream());
                 fileContent.Headers.ContentType =
                     new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
 
-                content.Add(fileContent, "file", file.FileName);
+                content.Add(fileContent, "File", file.FileName);
 
                 SetAuthorizationHeader();
                 var response = await _httpClient.PostAsync("api/document/upload", content);

@@ -29,9 +29,11 @@ namespace DocLocker.API.Services
 
             var document = new Document
             {
+                DocumentRequestId = model.DocumentRequestId,
                 FileName = model.FileName,
                 FilePath = fileName,
-                Status = "Pending",
+                VersionNumber = 1,
+                IsLatest = true,
                 UploadedByUserId = userId
             };
 
