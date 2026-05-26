@@ -23,4 +23,8 @@
     <ProjectReference Include="..\DocLocker.Core\DocLocker.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Uploads\" />
+  </ItemGroup>
+
 </Project>

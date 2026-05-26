@@ -72,6 +72,12 @@ namespace DocLocker.API.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return Unauthorized("Invalid credentials");
 
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Login attempt for deactivated user: {Email}", user.Email);
+                return Unauthorized("User is deactivated");
+            }
+
             var token = GenerateJwtToken(user);
 
             return Ok(new AuthResponseDTO

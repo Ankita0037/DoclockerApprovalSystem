@@ -145,6 +145,16 @@ public class AccountController : Controller
                 };
             }
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                if (!string.IsNullOrWhiteSpace(errorContent))
+                {
+                    ModelState.AddModelError("", errorContent);
+                    return View(model);
+                }
+            }
+
             _logger.LogWarning("Login failed with status code {StatusCode}.", response.StatusCode);
             ModelState.AddModelError("", "Invalid email or password");
         }
