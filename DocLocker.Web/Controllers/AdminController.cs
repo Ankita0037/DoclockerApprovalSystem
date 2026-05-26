@@ -23,6 +23,26 @@ namespace DocLocker.Web.Controllers
             return View();
         }
 
+        public IActionResult Projects()
+        {
+            return View();
+        }
+
+        public IActionResult Requests()
+        {
+            return View();
+        }
+
+        public IActionResult Reports()
+        {
+            return View();
+        }
+
+        public IActionResult Settings()
+        {
+            return View();
+        }
+
         public async Task<IActionResult> Users()
         {
             var token = HttpContext.Session.GetString("Token");

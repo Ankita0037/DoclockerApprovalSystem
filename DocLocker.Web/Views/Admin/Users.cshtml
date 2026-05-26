@@ -29,14 +29,7 @@
             </div>
         </div>
         <div class="card-body">
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger">@TempData["Error"]</div>
-            }
-            @if (TempData["Success"] != null)
-            {
-                <div class="alert alert-success">@TempData["Success"]</div>
-            }
+
             <!-- Filter and Search -->
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -104,7 +97,7 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editUserModal"
-                                                data-userid="@user.UserId" data-name="@user.Name" data-phone="" data-roleid="@(user.RoleName == "Manager" ? 2 : 3)">
+                                                data-userid="@user.UserId" data-name="@user.Name" data-phone="@user.PhoneNumber" data-rolename="@user.RoleName" data-roleid="@(user.RoleName == "Admin" ? 1 : user.RoleName == "Manager" ? 2 : 3)">
                                             Edit
                                         </button>
                                         <form asp-action="ToggleActivation" asp-route-userId="@user.UserId" method="post" class="d-inline">
@@ -139,29 +132,35 @@
             <form asp-action="CreateUser" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
                     <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input class="form-control" name="FullName" required minlength="3" />
+                        <input class="form-control" name="FullName" minlength="3" required data-val="true" data-val-required="Full name is required." data-val-length="Full name must be at least 3 characters." data-val-length-min="3" />
+                        <span class="text-danger small" data-valmsg-for="FullName" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input class="form-control" type="email" name="Email" required />
+                        <input class="form-control" type="email" name="Email" required data-val="true" data-val-required="Email is required." data-val-email="Enter a valid email address." />
+                        <span class="text-danger small" data-valmsg-for="Email" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Phone Number</label>
-                        <input class="form-control" name="PhoneNumber" required pattern="^[0-9]{10}$" />
+                        <input class="form-control" name="PhoneNumber" pattern="^[0-9]{10}$" required data-val="true" data-val-required="Phone number is required." data-val-regex="Enter a 10-digit phone number." data-val-regex-pattern="^[0-9]{10}$" />
+                        <span class="text-danger small" data-valmsg-for="PhoneNumber" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input class="form-control" type="password" name="Password" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$"
+                        <input class="form-control" type="password" name="Password" required data-val="true" data-val-required="Password is required." data-val-regex="Use at least 8 characters with uppercase, lowercase, number, and special character." data-val-regex-pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$"
                                title="At least 8 characters with uppercase, lowercase, number, and special character" />
+                        <span class="text-danger small" data-valmsg-for="Password" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select" name="RoleId" required>
+                        <select class="form-select" name="RoleId" required data-val="true" data-val-required="Role is required.">
                             <option value="2">Manager</option>
                             <option value="3" selected>Member</option>
                         </select>
+                        <span class="text-danger small" data-valmsg-for="RoleId" data-valmsg-replace="true"></span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -184,20 +183,26 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" id="editUserId" name="userId" />
                 <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
                     <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input class="form-control" id="editFullName" name="FullName" required minlength="3" />
+                        <input class="form-control" id="editFullName" name="FullName" minlength="3" required data-val="true" data-val-required="Full name is required." data-val-length="Full name must be at least 3 characters." data-val-length-min="3" />
+                        <span class="text-danger small" data-valmsg-for="FullName" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Phone Number</label>
-                        <input class="form-control" id="editPhoneNumber" name="PhoneNumber" required pattern="^[0-9]{10}$" />
+                        <input class="form-control" id="editPhoneNumber" name="PhoneNumber" pattern="^[0-9]{10}$" required data-val="true" data-val-required="Phone number is required." data-val-regex="Enter a 10-digit phone number." data-val-regex-pattern="^[0-9]{10}$" />
+                        <span class="text-danger small" data-valmsg-for="PhoneNumber" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select" id="editRoleId" name="RoleId" required>
+                        <select class="form-select" id="editRoleId" name="RoleId" required data-val="true" data-val-required="Role is required.">
+                            <option value="1">Admin</option>
                             <option value="2">Manager</option>
                             <option value="3">Member</option>
                         </select>
+                        <input type="hidden" id="editRoleIdHidden" name="RoleId" />
+                        <span class="text-danger small" data-valmsg-for="RoleId" data-valmsg-replace="true"></span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -210,6 +215,7 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         // Search filter
         document.getElementById('searchInput')?.addEventListener('keyup', function (e) {
@@ -273,10 +279,17 @@
         document.getElementById('editUserModal')?.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             if (!button) return;
+            const roleId = button.getAttribute('data-roleid') || '3';
+            const roleName = button.getAttribute('data-rolename') || '';
+            const roleSelect = document.getElementById('editRoleId');
+            const roleHidden = document.getElementById('editRoleIdHidden');
             document.getElementById('editUserId').value = button.getAttribute('data-userid') || '';
             document.getElementById('editFullName').value = button.getAttribute('data-name') || '';
             document.getElementById('editPhoneNumber').value = button.getAttribute('data-phone') || '';
-            document.getElementById('editRoleId').value = button.getAttribute('data-roleid') || '3';
+            roleSelect.value = roleId;
+            roleHidden.value = roleId;
+            const isAdmin = roleName.toLowerCase() === 'admin' || roleId === '1';
+            roleSelect.disabled = isAdmin;
         });
 
         updatePagination();

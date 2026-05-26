@@ -109,6 +109,20 @@ body {
     box-shadow: 0 8px 18px rgba(0, 133, 202, 0.28);
 }
 
+.sidebar-section {
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-section-title {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0.9rem 0 0.4rem;
+    padding: 0 0.9rem;
+    font-weight: 600;
+}
+
 .sidebar-user {
     border-top: 1px solid rgba(255, 255, 255, 0.14);
     color: rgba(255, 255, 255, 0.72);

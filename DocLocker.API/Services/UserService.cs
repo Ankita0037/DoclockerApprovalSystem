@@ -86,6 +86,7 @@ namespace DocLocker.API.Services
                     UserId = u.UserId,
                     Name = u.FullName,
                     Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
                     RoleName = u.Role != null ? u.Role.Name : string.Empty,
                     IsActive = u.IsActive
                 })
