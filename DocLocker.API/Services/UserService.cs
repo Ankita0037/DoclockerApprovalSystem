@@ -19,11 +19,25 @@ namespace DocLocker.API.Services
         {
             try
             {
-                _logger.LogInformation("Admin user creation started for email: {Email}", dto.Email);
+                var normalizedEmail = dto.Email?.Trim().ToLowerInvariant();
+                _logger.LogInformation("Admin user creation started for email: {Email}", normalizedEmail);
 
-                if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                if (string.IsNullOrWhiteSpace(normalizedEmail))
                 {
-                    _logger.LogWarning("Admin user creation failed due to duplicate email: {Email}", dto.Email);
+                    _logger.LogWarning("Admin user creation failed due to empty email.");
+                    return (false, "Email is required", null);
+                }
+
+                var passwordRegex = new System.Text.RegularExpressions.Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$");
+                if (!passwordRegex.IsMatch(dto.Password ?? string.Empty))
+                {
+                    _logger.LogWarning("Admin user creation failed due to weak password.");
+                    return (false, "Password must be at least 8 characters and include uppercase, lowercase, number, and special character", null);
+                }
+
+                if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
+                {
+                    _logger.LogWarning("Admin user creation failed due to duplicate email: {Email}", normalizedEmail);
                     return (false, "Email already exists", null);
                 }
 
@@ -43,7 +57,7 @@ namespace DocLocker.API.Services
                 var user = new User
                 {
                     FullName = dto.FullName,
-                    Email = dto.Email,
+                    Email = normalizedEmail,
                     PhoneNumber = dto.PhoneNumber,
                     RoleId = dto.RoleId,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
@@ -137,6 +151,12 @@ namespace DocLocker.API.Services
                 {
                     _logger.LogWarning("Admin user activation toggle failed. User not found: {UserId}", userId);
                     return (false, "User not found", null);
+                }
+
+                if (user.RoleId == 1)
+                {
+                    _logger.LogWarning("Admin user activation toggle blocked for admin user. UserId: {UserId}", userId);
+                    return (false, "Admin users cannot be deactivated", null);
                 }
 
                 user.IsActive = !user.IsActive;
