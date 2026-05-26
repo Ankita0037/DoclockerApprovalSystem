@@ -1,17 +1,16 @@
-using DocLocker.API.Data;
+using DocLocker.API.Repositories;
 using DocLocker.Core.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace DocLocker.API.Services
 {
     public class UserService : IUserService
     {
-        private readonly DocLockerDbContext _context;
+        private readonly IUserRepository _userRepository;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(DocLockerDbContext context, ILogger<UserService> logger)
+        public UserService(IUserRepository userRepository, ILogger<UserService> logger)
         {
-            _context = context;
+            _userRepository = userRepository;
             _logger = logger;
         }
 
@@ -35,7 +34,7 @@ namespace DocLocker.API.Services
                     return (false, "Password must be at least 8 characters and include uppercase, lowercase, number, and special character", null);
                 }
 
-                if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
+                if (await _userRepository.EmailExistsAsync(normalizedEmail))
                 {
                     _logger.LogWarning("Admin user creation failed due to duplicate email: {Email}", normalizedEmail);
                     return (false, "Email already exists", null);
@@ -47,7 +46,7 @@ namespace DocLocker.API.Services
                     return (false, "Role must be Manager or Member", null);
                 }
 
-                var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == dto.RoleId);
+                var roleExists = await _userRepository.RoleExistsAsync(dto.RoleId);
                 if (!roleExists)
                 {
                     _logger.LogWarning("Admin user creation failed because role not configured: {RoleId}", dto.RoleId);
@@ -64,8 +63,7 @@ namespace DocLocker.API.Services
                     IsActive = true
                 };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                await _userRepository.AddAsync(user);
 
                 _logger.LogInformation("Admin user created successfully: {Email}", dto.Email);
                 return (true, null, user.UserId);
@@ -81,9 +79,8 @@ namespace DocLocker.API.Services
         {
             _logger.LogInformation("Admin user list retrieval started.");
 
-            var users = await _context.Users
-                .AsNoTracking()
-                .Include(u => u.Role)
+            var users = await _userRepository.GetAllWithRolesAsync();
+            var results = users
                 .Select(u => new UserSummaryDTO
                 {
                     UserId = u.UserId,
@@ -92,10 +89,10 @@ namespace DocLocker.API.Services
                     RoleName = u.Role != null ? u.Role.Name : string.Empty,
                     IsActive = u.IsActive
                 })
-                .ToListAsync();
+                .ToList();
 
-            _logger.LogInformation("Admin user list retrieval completed. Count: {Count}", users.Count);
-            return users;
+            _logger.LogInformation("Admin user list retrieval completed. Count: {Count}", results.Count);
+            return results;
         }
 
         public async Task<(bool Success, string? ErrorMessage)> UpdateAsync(int userId, UpdateUserDTO dto)
@@ -104,7 +101,7 @@ namespace DocLocker.API.Services
             {
                 _logger.LogInformation("Admin user update started for user id: {UserId}", userId);
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     _logger.LogWarning("Admin user update failed. User not found: {UserId}", userId);
@@ -117,7 +114,7 @@ namespace DocLocker.API.Services
                     return (false, "Role must be Manager or Member");
                 }
 
-                var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == dto.RoleId);
+                var roleExists = await _userRepository.RoleExistsAsync(dto.RoleId);
                 if (!roleExists)
                 {
                     _logger.LogWarning("Admin user update failed because role not configured: {RoleId}", dto.RoleId);
@@ -128,7 +125,7 @@ namespace DocLocker.API.Services
                 user.PhoneNumber = dto.PhoneNumber;
                 user.RoleId = dto.RoleId;
 
-                await _context.SaveChangesAsync();
+                await _userRepository.SaveChangesAsync();
 
                 _logger.LogInformation("Admin user updated successfully. User id: {UserId}", userId);
                 return (true, null);
@@ -146,7 +143,7 @@ namespace DocLocker.API.Services
             {
                 _logger.LogInformation("Admin user activation toggle started for user id: {UserId}", userId);
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     _logger.LogWarning("Admin user activation toggle failed. User not found: {UserId}", userId);
@@ -160,7 +157,7 @@ namespace DocLocker.API.Services
                 }
 
                 user.IsActive = !user.IsActive;
-                await _context.SaveChangesAsync();
+                await _userRepository.SaveChangesAsync();
 
                 _logger.LogInformation("Admin user activation toggled. User id: {UserId}, IsActive: {IsActive}", userId, user.IsActive);
                 return (true, null, user.IsActive);
