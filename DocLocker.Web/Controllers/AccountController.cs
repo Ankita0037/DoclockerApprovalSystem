@@ -90,15 +90,34 @@ public class AccountController : Controller
 
         try
         {
+            _logger.LogInformation("Login attempt started.");
             var response = await _httpClient.PostAsJsonAsync("api/auth/login", model);
 
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<AuthResponseDTO>();
 
+                if (result == null || string.IsNullOrWhiteSpace(result.Token))
+                {
+                    _logger.LogWarning("Login response missing token.");
+                    ModelState.AddModelError("", "Unable to complete login. Please try again.");
+                    return View(model);
+                }
+
                 // Extract User ID from JWT token
                 var handler = new JwtSecurityTokenHandler();
-                var token = handler.ReadJwtToken(result.Token);
+                JwtSecurityToken token;
+                try
+                {
+                    token = handler.ReadJwtToken(result.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Login token parsing failed.");
+                    ModelState.AddModelError("", "Unable to complete login. Please try again.");
+                    return View(model);
+                }
+
                 var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
                 // Store in session
@@ -110,6 +129,12 @@ public class AccountController : Controller
                 {
                     HttpContext.Session.SetString("UserId", userIdClaim);
                 }
+                else
+                {
+                    _logger.LogWarning("Login token missing user id claim.");
+                }
+
+                _logger.LogInformation("Login successful.");
 
                 // Role-based redirect
                 return result.RoleName switch
@@ -120,7 +145,18 @@ public class AccountController : Controller
                 };
             }
 
+            _logger.LogWarning("Login failed with status code {StatusCode}.", response.StatusCode);
             ModelState.AddModelError("", "Invalid email or password");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Login request failed.");
+            ModelState.AddModelError("", "Unable to reach login service. Please try again.");
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Login request timed out.");
+            ModelState.AddModelError("", "Login request timed out. Please try again.");
         }
         catch (Exception ex)
         {

@@ -14,37 +14,51 @@ namespace DocLocker.API.Controllers
     {
         private readonly DocLockerDbContext _context;
         private readonly IConfiguration _config;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(DocLockerDbContext context, IConfiguration config)
+        public AuthController(DocLockerDbContext context, IConfiguration config, ILogger<AuthController> logger)
         {
             _context = context;
             _config = config;
+            _logger = logger;
         }
 
         // REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                return BadRequest("Email already exists");
-
-            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == dto.RoleId);
-            if (role == null)
-                return BadRequest("Invalid role");
-
-            var user = new User
+            try
             {
-                FullName = dto.FullName,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                RoleId = role.RoleId,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
-            };
+                if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                {
+                    _logger.LogWarning("Registration attempt with duplicate email: {Email}", dto.Email);
+                    return BadRequest("Email already exists");
+                }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                var memberRoleId = 3;
+                if (!await _context.Roles.AnyAsync(r => r.RoleId == memberRoleId))
+                    return BadRequest("Member role is not configured");
 
-            return Ok("User registered successfully");
+                var user = new User
+                {
+                    FullName = dto.FullName,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber,
+                    RoleId = memberRoleId,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User registered successfully: {Email}", dto.Email);
+                return Ok("User registered successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Registration error for email: {Email}", dto.Email);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred during registration");
+            }
         }
 
         // LOGIN
