@@ -4,6 +4,7 @@
     var statusFilter = Context.Request.Query["status"].ToString() ?? "";
     var isAssignmentStatusActive = currentAction == "MyDocuments" && currentController == "Member" && !string.IsNullOrWhiteSpace(statusFilter);
     var allowUserManagement = string.Equals(Context.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
+    var isAdminRequestMenuActive = currentAction == "Requests" && currentController == "Admin";
 }
 
 <aside class="sidebar-nav p-0">
@@ -63,14 +64,12 @@
 
         @if (Context.Session.GetString("Role") == "Admin")
         {
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Main</div>
+            <div class="sidebar-section">   
                 <a href="/Admin/Index" class="sidebar-nav-link @(currentAction == "Index" && currentController == "Admin" ? "active" : "") mb-2">
                     <i class="bi bi-speedometer2 me-2"></i>Dashboard
                 </a>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title">Management</div>
                 @if (allowUserManagement)
                 {
                     <a href="/Admin/Users" class="sidebar-nav-link @(currentAction == "Users" && currentController == "Admin" ? "active" : "") mb-2">
@@ -82,10 +81,35 @@
                 </a>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title">Workflow</div>
-                <a href="/Admin/Requests" class="sidebar-nav-link @(currentAction == "Requests" && currentController == "Admin" ? "active" : "") mb-2">
-                    <i class="bi bi-inbox me-2"></i>Requests
+                <a class="sidebar-nav-link mb-2 d-flex justify-content-between align-items-center"
+                   data-bs-toggle="collapse"
+                   href="#adminRequestStatusMenu"
+                   role="button"
+                   aria-expanded="@(isAdminRequestMenuActive.ToString().ToLowerInvariant())"
+                   aria-controls="adminRequestStatusMenu">
+                    <span><i class="bi bi-inbox me-2"></i>Requests</span>
+                    <i class="bi bi-chevron-down small"></i>
                 </a>
+                <div class="collapse @(isAdminRequestMenuActive ? "show" : "")" id="adminRequestStatusMenu">
+                    <a href="/Admin/Requests" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && string.IsNullOrWhiteSpace(statusFilter) ? "active" : "") mb-2">
+                        All Requests
+                    </a>
+                    <a href="/Admin/Requests?status=Pending" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && statusFilter == "Pending" ? "active" : "") mb-2">
+                        Pending
+                    </a>
+                    <a href="/Admin/Requests?status=Submitted" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && statusFilter == "Submitted" ? "active" : "") mb-2">
+                        Submitted
+                    </a>
+                    <a href="/Admin/Requests?status=Approved" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && statusFilter == "Approved" ? "active" : "") mb-2">
+                        Approved
+                    </a>
+                    <a href="/Admin/Requests?status=Rejected" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && statusFilter == "Rejected" ? "active" : "") mb-2">
+                        Rejected
+                    </a>
+                    <a href="/Admin/Requests?status=RevisionRequested" class="sidebar-nav-link ps-4 @(currentAction == "Requests" && currentController == "Admin" && statusFilter == "RevisionRequested" ? "active" : "") mb-2">
+                        Revision Requested
+                    </a>
+                </div>
                 <a href="/Admin/Reports" class="sidebar-nav-link @(currentAction == "Reports" && currentController == "Admin" ? "active" : "") mb-2">
                     <i class="bi bi-bar-chart-line me-2"></i>Reports
                 </a>
