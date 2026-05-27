@@ -40,10 +40,10 @@ namespace DocLocker.API.Services
                     return (false, "Email already exists", null);
                 }
 
-                if (dto.RoleId != 2 && dto.RoleId != 3)
+                if (dto.RoleId != 1 && dto.RoleId != 2 && dto.RoleId != 3)
                 {
                     _logger.LogWarning("Admin user creation failed due to invalid role: {RoleId}", dto.RoleId);
-                    return (false, "Role must be Manager or Member", null);
+                    return (false, "Role must be Admin, Manager, or Member", null);
                 }
 
                 var roleExists = await _userRepository.RoleExistsAsync(dto.RoleId);
@@ -59,6 +59,7 @@ namespace DocLocker.API.Services
                     Email = normalizedEmail,
                     PhoneNumber = dto.PhoneNumber,
                     RoleId = dto.RoleId,
+                    AllowUserManagement = dto.RoleId == 1 && dto.AllowUserManagement,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     IsActive = true
                 };
@@ -87,6 +88,7 @@ namespace DocLocker.API.Services
                     Name = u.FullName,
                     Email = u.Email,
                     PhoneNumber = u.PhoneNumber,
+                    AllowUserManagement = u.AllowUserManagement,
                     RoleName = u.Role != null ? u.Role.Name : string.Empty,
                     IsActive = u.IsActive
                 })
@@ -109,10 +111,10 @@ namespace DocLocker.API.Services
                     return (false, "User not found");
                 }
 
-                if (dto.RoleId != 2 && dto.RoleId != 3)
+                if (dto.RoleId != 1 && dto.RoleId != 2 && dto.RoleId != 3)
                 {
                     _logger.LogWarning("Admin user update failed due to invalid role: {RoleId}", dto.RoleId);
-                    return (false, "Role must be Manager or Member");
+                    return (false, "Role must be Admin, Manager, or Member");
                 }
 
                 var roleExists = await _userRepository.RoleExistsAsync(dto.RoleId);
@@ -125,6 +127,7 @@ namespace DocLocker.API.Services
                 user.FullName = dto.FullName;
                 user.PhoneNumber = dto.PhoneNumber;
                 user.RoleId = dto.RoleId;
+                user.AllowUserManagement = dto.RoleId == 1 && dto.AllowUserManagement;
 
                 await _userRepository.SaveChangesAsync();
 

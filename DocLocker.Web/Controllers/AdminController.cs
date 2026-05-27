@@ -12,6 +12,9 @@ namespace DocLocker.Web.Controllers
         private readonly HttpClient _httpClient;
         private readonly ILogger<AdminController> _logger;
 
+    private bool HasUserManagementAccess()
+        => string.Equals(HttpContext.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
+
         public AdminController(IHttpClientFactory factory, ILogger<AdminController> logger)
         {
             _httpClient = factory.CreateClient("api");
@@ -45,6 +48,11 @@ namespace DocLocker.Web.Controllers
 
         public async Task<IActionResult> Users()
         {
+            if (!HasUserManagementAccess())
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
             var token = HttpContext.Session.GetString("Token");
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -78,6 +86,11 @@ namespace DocLocker.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser(CreateUserDTO dto)
         {
+            if (!HasUserManagementAccess())
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Please correct the form errors.";
@@ -119,6 +132,11 @@ namespace DocLocker.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateUser(int userId, UpdateUserDTO dto)
         {
+            if (!HasUserManagementAccess())
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Please correct the form errors.";
@@ -160,6 +178,11 @@ namespace DocLocker.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActivation(int userId)
         {
+            if (!HasUserManagementAccess())
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
             var token = HttpContext.Session.GetString("Token");
             if (string.IsNullOrWhiteSpace(token))
             {

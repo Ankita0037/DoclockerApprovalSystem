@@ -14,5 +14,7 @@ namespace DocLocker.Core.Models
 
         [Required]
         public int RoleId { get; set; }
+
+        public bool AllowUserManagement { get; set; }
     }
 }

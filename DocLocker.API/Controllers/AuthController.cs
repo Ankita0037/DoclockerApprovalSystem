@@ -45,6 +45,7 @@ namespace DocLocker.API.Controllers
                     Email = dto.Email,
                     PhoneNumber = dto.PhoneNumber,
                     RoleId = memberRoleId,
+                    AllowUserManagement = false,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
                 };
 
@@ -86,7 +87,8 @@ namespace DocLocker.API.Controllers
                 FullName = user.FullName,
                 Email = user.Email,
                 RoleId = user.RoleId,
-                RoleName = user.Role?.Name
+                RoleName = user.Role?.Name,
+                AllowUserManagement = user.AllowUserManagement
             });
         }
 

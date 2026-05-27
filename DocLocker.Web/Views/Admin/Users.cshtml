@@ -43,6 +43,7 @@
                 <div class="col-md-3">
                     <select class="form-select" id="roleFilter">
                         <option value="">All Roles</option>
+                        <option value="Admin">Admin</option>
                         <option value="Member">Member</option>
                         <option value="Manager">Manager</option>
                     </select>
@@ -97,7 +98,7 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editUserModal"
-                                                data-userid="@user.UserId" data-name="@user.Name" data-phone="@user.PhoneNumber" data-rolename="@user.RoleName" data-roleid="@(user.RoleName == "Admin" ? 1 : user.RoleName == "Manager" ? 2 : 3)">
+                                                data-userid="@user.UserId" data-name="@user.Name" data-phone="@user.PhoneNumber" data-rolename="@user.RoleName" data-roleid="@(user.RoleName == "Admin" ? 1 : user.RoleName == "Manager" ? 2 : 3)" data-allowusermanagement="@user.AllowUserManagement">
                                             Edit
                                         </button>
                                         <form asp-action="ToggleActivation" asp-route-userId="@user.UserId" method="post" class="d-inline">
@@ -156,11 +157,21 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select" name="RoleId" required data-val="true" data-val-required="Role is required.">
+                        <select class="form-select" id="createRoleId" name="RoleId" required data-val="true" data-val-required="Role is required.">
+                            <option value="1">Admin</option>
                             <option value="2">Manager</option>
                             <option value="3" selected>Member</option>
                         </select>
                         <span class="text-danger small" data-valmsg-for="RoleId" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="mb-3" id="createUserManagementSection" style="display: none;">
+                        <label class="form-label">User Management Access</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createAllowUserManagement" name="AllowUserManagement" value="true" checked>
+                            <label class="form-check-label" for="createAllowUserManagement">
+                                Allow access to user management
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -203,6 +214,15 @@
                         </select>
                         <input type="hidden" id="editRoleIdHidden" name="RoleId" />
                         <span class="text-danger small" data-valmsg-for="RoleId" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="mb-3" id="editUserManagementSection" style="display: none;">
+                        <label class="form-label">User Management Access</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editAllowUserManagement" name="AllowUserManagement" value="true">
+                            <label class="form-check-label" for="editAllowUserManagement">
+                                Allow access to user management
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -276,13 +296,40 @@
             updatePagination();
         });
 
+        const createRoleSelect = document.getElementById('createRoleId');
+        const createUserManagementSection = document.getElementById('createUserManagementSection');
+        const createAllowUserManagement = document.getElementById('createAllowUserManagement');
+
+        function toggleCreateUserManagement() {
+            const isAdminRole = createRoleSelect?.value === '1';
+            if (!createUserManagementSection || !createAllowUserManagement) return;
+            createUserManagementSection.style.display = isAdminRole ? '' : 'none';
+            createAllowUserManagement.checked = isAdminRole;
+        }
+
+        createRoleSelect?.addEventListener('change', toggleCreateUserManagement);
+        toggleCreateUserManagement();
+
+        document.getElementById('editRoleId')?.addEventListener('change', function (event) {
+            const roleSelect = event.target;
+            const userManagementSection = document.getElementById('editUserManagementSection');
+            const userManagementToggle = document.getElementById('editAllowUserManagement');
+            const isAdminRole = roleSelect.value === '1';
+            if (!userManagementSection || !userManagementToggle) return;
+            userManagementSection.style.display = isAdminRole ? '' : 'none';
+            userManagementToggle.checked = isAdminRole;
+        });
+
         document.getElementById('editUserModal')?.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             if (!button) return;
             const roleId = button.getAttribute('data-roleid') || '3';
             const roleName = button.getAttribute('data-rolename') || '';
+            const allowUserManagement = button.getAttribute('data-allowusermanagement') || 'false';
             const roleSelect = document.getElementById('editRoleId');
             const roleHidden = document.getElementById('editRoleIdHidden');
+            const userManagementSection = document.getElementById('editUserManagementSection');
+            const userManagementToggle = document.getElementById('editAllowUserManagement');
             document.getElementById('editUserId').value = button.getAttribute('data-userid') || '';
             document.getElementById('editFullName').value = button.getAttribute('data-name') || '';
             document.getElementById('editPhoneNumber').value = button.getAttribute('data-phone') || '';
@@ -290,6 +337,10 @@
             roleHidden.value = roleId;
             const isAdmin = roleName.toLowerCase() === 'admin' || roleId === '1';
             roleSelect.disabled = isAdmin;
+            if (userManagementSection && userManagementToggle) {
+                userManagementSection.style.display = isAdmin ? '' : 'none';
+                userManagementToggle.checked = allowUserManagement.toLowerCase() === 'true';
+            }
         });
 
         updatePagination();

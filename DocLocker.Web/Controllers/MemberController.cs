@@ -4,13 +4,13 @@ using DocLocker.Web.Filters;
 
 namespace DocLocker.Web.Controllers
 {
-    [SessionAuthorize("User")]
-    public class UserController : Controller
+    [SessionAuthorize("Member")]
+    public class MemberController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<UserController> _logger;
+        private readonly ILogger<MemberController> _logger;
 
-        public UserController(IHttpClientFactory factory, ILogger<UserController> logger)
+        public MemberController(IHttpClientFactory factory, ILogger<MemberController> logger)
         {
             _httpClient = factory.CreateClient("api");
             _logger = logger;

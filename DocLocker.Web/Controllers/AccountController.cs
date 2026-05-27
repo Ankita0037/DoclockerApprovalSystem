@@ -21,12 +21,12 @@ public class AccountController : Controller
         var role = HttpContext.Session.GetString("Role");
         if (!string.IsNullOrEmpty(role))
         {
-            return role switch
-            {
-                "Admin" => RedirectToAction("Index", "Admin"),
-                "Manager" => RedirectToAction("Index", "Manager"),
-                _ => RedirectToAction("Index", "User")
-            };
+                return role switch
+                {
+                    "Admin" => RedirectToAction("Index", "Admin"),
+                    "Manager" => RedirectToAction("Index", "Manager"),
+                    _ => RedirectToAction("Index", "Member")
+                };
         }
         return View();
     }
@@ -70,12 +70,12 @@ public class AccountController : Controller
         var role = HttpContext.Session.GetString("Role");
         if (!string.IsNullOrEmpty(role))
         {
-            return role switch
-            {
-                "Admin" => RedirectToAction("Index", "Admin"),
-                "Manager" => RedirectToAction("Index", "Manager"),
-                _ => RedirectToAction("Index", "User")
-            };
+                return role switch
+                {
+                    "Admin" => RedirectToAction("Index", "Admin"),
+                    "Manager" => RedirectToAction("Index", "Manager"),
+                    _ => RedirectToAction("Index", "Member")
+                };
         }
         return View();
     }
@@ -125,6 +125,7 @@ public class AccountController : Controller
                 HttpContext.Session.SetString("Role", result.RoleName ?? string.Empty);
                 HttpContext.Session.SetString("FullName", result.FullName);
                 HttpContext.Session.SetString("Email", result.Email);
+                HttpContext.Session.SetString("AllowUserManagement", result.AllowUserManagement.ToString().ToLowerInvariant());
                 if (!string.IsNullOrEmpty(userIdClaim))
                 {
                     HttpContext.Session.SetString("UserId", userIdClaim);
@@ -136,12 +137,14 @@ public class AccountController : Controller
 
                 _logger.LogInformation("Login successful.");
 
+                TempData["Success"] = "Login successful.";
+
                 // Role-based redirect
                 return result.RoleName switch
                 {
                     "Admin" => RedirectToAction("Index", "Admin"),
                     "Manager" => RedirectToAction("Index", "Manager"),
-                    _ => RedirectToAction("Index", "User")
+                    _ => RedirectToAction("Index", "Member")
                 };
             }
 
