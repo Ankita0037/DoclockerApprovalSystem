@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DocLocker.API.Controllers
 {
+    // Sample weather forecast endpoint.
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
@@ -13,11 +14,13 @@ namespace DocLocker.API.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
+        // Initialize with logger.
         public WeatherForecastController(ILogger<WeatherForecastController> logger)
         {
             _logger = logger;
         }
 
+        // Return random weather forecast data.
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {

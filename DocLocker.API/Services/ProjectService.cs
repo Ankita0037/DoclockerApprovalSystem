@@ -14,6 +14,7 @@ namespace DocLocker.API.Services
             _logger = logger;
         }
 
+        // Create a new project for an admin.
         public async Task<(bool Success, string? ErrorMessage, int? ProjectId)> CreateProjectAsync(CreateProjectDTO dto, int adminId)
         {
             try
@@ -60,6 +61,7 @@ namespace DocLocker.API.Services
             }
         }
 
+        // Update project details for admins.
         public async Task<(bool Success, string? ErrorMessage)> UpdateProjectAsync(int projectId, UpdateProjectDTO dto)
         {
             try
@@ -107,6 +109,7 @@ namespace DocLocker.API.Services
             }
         }
 
+        // Return all project summaries for admins.
         public async Task<IReadOnlyList<ProjectSummaryDTO>> GetAllAsync()
         {
             try
@@ -123,6 +126,7 @@ namespace DocLocker.API.Services
             }
         }
 
+        // Return project summaries for the manager.
         public async Task<IReadOnlyList<ProjectSummaryDTO>> GetForManagerAsync(int managerId)
         {
             try
@@ -135,6 +139,106 @@ namespace DocLocker.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Manager project list retrieval failed. ManagerId: {ManagerId}", managerId);
+                throw;
+            }
+        }
+
+        // Return members assigned to a manager's project.
+        public async Task<(bool Success, string? ErrorMessage, ProjectMembersViewDTO? Data)> GetProjectMembersAsync(int projectId, int managerId)
+        {
+            try
+            {
+                if (!await _projectRepository.IsManagerAssignedToProjectAsync(projectId, managerId))
+                {
+                    _logger.LogWarning("Manager project member retrieval denied. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, managerId);
+                    return (false, "FORBIDDEN", null);
+                }
+
+                var assignedMembers = await _projectRepository.GetProjectMemberSummariesAsync(projectId);
+                var availableMembers = await _projectRepository.GetAvailableMemberSummariesAsync(projectId);
+                var data = new ProjectMembersViewDTO
+                {
+                    AssignedMembers = assignedMembers,
+                    AvailableMembers = availableMembers
+                };
+
+                return (true, null, data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager project member retrieval failed. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, managerId);
+                throw;
+            }
+        }
+
+        // Assign a member to a manager's project.
+        public async Task<(bool Success, string? ErrorMessage)> AddProjectMemberAsync(int projectId, int managerId, int memberId)
+        {
+            try
+            {
+                if (!await _projectRepository.IsManagerAssignedToProjectAsync(projectId, managerId))
+                {
+                    _logger.LogWarning("Manager project member assignment denied. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, managerId);
+                    return (false, "FORBIDDEN");
+                }
+
+                var user = await _projectRepository.GetUserByIdAsync(memberId);
+                if (user == null)
+                {
+                    _logger.LogWarning("Project member assignment failed. Member not found: {MemberId}", memberId);
+                    return (false, "Member not found");
+                }
+
+                if (user.RoleId != 3)
+                {
+                    _logger.LogWarning("Project member assignment failed. User is not a member: {MemberId}", memberId);
+                    return (false, "User is not a member");
+                }
+
+                if (await _projectRepository.ProjectMemberExistsAsync(projectId, memberId))
+                {
+                    _logger.LogWarning("Project member assignment failed. Duplicate assignment. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
+                    return (false, "Member already assigned");
+                }
+
+                await _projectRepository.AddProjectMemberAsync(new ProjectMember
+                {
+                    ProjectId = projectId,
+                    MemberId = memberId
+                });
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager project member assignment failed. ProjectId: {ProjectId}, ManagerId: {ManagerId}, MemberId: {MemberId}", projectId, managerId, memberId);
+                throw;
+            }
+        }
+
+        // Remove a member from a manager's project.
+        public async Task<(bool Success, string? ErrorMessage)> RemoveProjectMemberAsync(int projectId, int managerId, int memberId)
+        {
+            try
+            {
+                if (!await _projectRepository.IsManagerAssignedToProjectAsync(projectId, managerId))
+                {
+                    _logger.LogWarning("Manager project member removal denied. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, managerId);
+                    return (false, "FORBIDDEN");
+                }
+
+                if (!await _projectRepository.ProjectMemberExistsAsync(projectId, memberId))
+                {
+                    _logger.LogWarning("Project member removal failed. Assignment not found. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
+                    return (false, "Member assignment not found");
+                }
+
+                await _projectRepository.RemoveProjectMemberAsync(projectId, memberId);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager project member removal failed. ProjectId: {ProjectId}, ManagerId: {ManagerId}, MemberId: {MemberId}", projectId, managerId, memberId);
                 throw;
             }
         }

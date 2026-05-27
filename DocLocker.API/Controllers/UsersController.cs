@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DocLocker.API.Controllers
 {
+    // User management.
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
@@ -13,12 +14,14 @@ namespace DocLocker.API.Controllers
         private readonly IUserService _userService;
         private readonly ILogger<UsersController> _logger;
 
+        // Initialize with user service and logger.
         public UsersController(IUserService userService, ILogger<UsersController> logger)
         {
             _userService = userService;
             _logger = logger;
         }
 
+        // Create a new user.
         [HttpPost]
         public async Task<IActionResult> CreateUser(CreateUserDTO dto)
         {
@@ -44,6 +47,7 @@ namespace DocLocker.API.Controllers
             }
         }
 
+        // Return all users.
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
@@ -59,6 +63,7 @@ namespace DocLocker.API.Controllers
             }
         }
 
+        // Update an existing user.
         [HttpPut("{userId:int}")]
         public async Task<IActionResult> UpdateUser(int userId, UpdateUserDTO dto)
         {
@@ -84,6 +89,7 @@ namespace DocLocker.API.Controllers
             }
         }
 
+        // Toggle user activation.
         [HttpPatch("{userId:int}/activation")]
         public async Task<IActionResult> ToggleActivation(int userId)
         {

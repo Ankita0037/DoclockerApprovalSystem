@@ -15,6 +15,7 @@ namespace DocLocker.API.Repositories
             _logger = logger;
         }
 
+        // Check if an email exists.
         public async Task<bool> EmailExistsAsync(string email)
         {
             try
@@ -28,6 +29,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Check if a role exists.
         public async Task<bool> RoleExistsAsync(int roleId)
         {
             try
@@ -41,6 +43,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Return a user by id.
         public async Task<User?> GetByIdAsync(int userId)
         {
             try
@@ -54,6 +57,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Return all users with roles included.
         public async Task<IReadOnlyList<User>> GetAllWithRolesAsync()
         {
             try
@@ -70,6 +74,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Add a new user record.
         public async Task AddAsync(User user)
         {
             try
@@ -84,6 +89,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Save pending changes.
         public async Task SaveChangesAsync()
         {
             try

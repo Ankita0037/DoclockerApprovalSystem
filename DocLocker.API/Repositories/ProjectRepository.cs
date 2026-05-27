@@ -9,12 +9,14 @@ namespace DocLocker.API.Repositories
         private readonly DocLockerDbContext _context;
         private readonly ILogger<ProjectRepository> _logger;
 
+        // Initialize with database context and logger.
         public ProjectRepository(DocLockerDbContext context, ILogger<ProjectRepository> logger)
         {
             _context = context;
             _logger = logger;
         }
 
+        // Return a user by id.
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             try
@@ -28,6 +30,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Create a project and assign the manager.
         public async Task<int> CreateProjectAsync(Project project, int managerId)
         {
             try
@@ -49,6 +52,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Return a project with manager info.
         public async Task<Project?> GetProjectByIdAsync(int projectId)
         {
             try
@@ -64,6 +68,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Update project manager assignments.
         public async Task UpdateProjectAsync(Project project, int managerId)
         {
             try
@@ -91,6 +96,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Return project summaries for admin views.
         public async Task<IReadOnlyList<ProjectSummaryDTO>> GetAllProjectSummariesAsync()
         {
             try
@@ -115,6 +121,7 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Return project summaries for a manager.
         public async Task<IReadOnlyList<ProjectSummaryDTO>> GetProjectSummariesForManagerAsync(int managerId)
         {
             try
@@ -136,6 +143,132 @@ namespace DocLocker.API.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving manager project summaries. ManagerId: {ManagerId}", managerId);
+                throw;
+            }
+        }
+
+        // Check manager assignment for a project.
+        public async Task<bool> IsManagerAssignedToProjectAsync(int projectId, int managerId)
+        {
+            try
+            {
+                return await _context.ProjectManagers
+                    .AsNoTracking()
+                    .AnyAsync(pm => pm.ProjectId == projectId && pm.ManagerId == managerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking manager assignment. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, managerId);
+                throw;
+            }
+        }
+
+        // Return assigned members for a project.
+        public async Task<IReadOnlyList<UserSummaryDTO>> GetProjectMemberSummariesAsync(int projectId)
+        {
+            try
+            {
+                return await (from projectMember in _context.ProjectMembers.AsNoTracking()
+                              join user in _context.Users.AsNoTracking()
+                                  on projectMember.MemberId equals user.UserId
+                              join role in _context.Roles.AsNoTracking()
+                                  on user.RoleId equals role.RoleId
+                              where projectMember.ProjectId == projectId
+                              select new UserSummaryDTO
+                              {
+                                  UserId = user.UserId,
+                                  Name = user.FullName,
+                                  Email = user.Email,
+                                  PhoneNumber = user.PhoneNumber,
+                                  AllowUserManagement = user.AllowUserManagement,
+                                  RoleName = role.Name,
+                                  IsActive = user.IsActive
+                              }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving project members. ProjectId: {ProjectId}", projectId);
+                throw;
+            }
+        }
+
+        // Return available members not yet assigned.
+        public async Task<IReadOnlyList<UserSummaryDTO>> GetAvailableMemberSummariesAsync(int projectId)
+        {
+            try
+            {
+                return await (from user in _context.Users.AsNoTracking()
+                              join role in _context.Roles.AsNoTracking()
+                                  on user.RoleId equals role.RoleId
+                              where user.RoleId == 3
+                              where !_context.ProjectMembers.Any(pm => pm.ProjectId == projectId && pm.MemberId == user.UserId)
+                              select new UserSummaryDTO
+                              {
+                                  UserId = user.UserId,
+                                  Name = user.FullName,
+                                  Email = user.Email,
+                                  PhoneNumber = user.PhoneNumber,
+                                  AllowUserManagement = user.AllowUserManagement,
+                                  RoleName = role.Name,
+                                  IsActive = user.IsActive
+                              }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available members. ProjectId: {ProjectId}", projectId);
+                throw;
+            }
+        }
+
+        // Check if member is already assigned.
+        public async Task<bool> ProjectMemberExistsAsync(int projectId, int memberId)
+        {
+            try
+            {
+                return await _context.ProjectMembers
+                    .AsNoTracking()
+                    .AnyAsync(pm => pm.ProjectId == projectId && pm.MemberId == memberId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking project member assignment. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
+                throw;
+            }
+        }
+
+        // Add a member assignment.
+        public async Task AddProjectMemberAsync(ProjectMember projectMember)
+        {
+            try
+            {
+                _context.ProjectMembers.Add(projectMember);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding project member. ProjectId: {ProjectId}, MemberId: {MemberId}", projectMember.ProjectId, projectMember.MemberId);
+                throw;
+            }
+        }
+
+        // Remove a member assignment.
+        public async Task RemoveProjectMemberAsync(int projectId, int memberId)
+        {
+            try
+            {
+                var projectMember = await _context.ProjectMembers
+                    .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.MemberId == memberId);
+                if (projectMember == null)
+                {
+                    return;
+                }
+
+                _context.ProjectMembers.Remove(projectMember);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing project member. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
                 throw;
             }
         }

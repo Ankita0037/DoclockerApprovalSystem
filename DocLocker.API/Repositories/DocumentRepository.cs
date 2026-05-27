@@ -10,11 +10,13 @@ namespace DocLocker.API.Repositories
     {
         private readonly DocLockerDbContext _context;
 
+        // Database context.
         public DocumentRepository(DocLockerDbContext context)
         {
             _context = context;
         }
 
+        // Insert a new document record.
         public async Task<int> AddAsync(Document document)
         {
             _context.Documents.Add(document);
@@ -22,6 +24,7 @@ namespace DocLocker.API.Repositories
             return document.DocumentId;
         }
 
+        // Fetch documents uploaded by a user.
         public async Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId)
         {
             return await _context.Documents

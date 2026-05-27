@@ -14,6 +14,7 @@ namespace DocLocker.API.Services
             _logger = logger;
         }
 
+        // Create a new user after validation.
         public async Task<(bool Success, string? ErrorMessage, int? UserId)> CreateUserAsync(CreateUserDTO dto)
         {
             try
@@ -76,6 +77,7 @@ namespace DocLocker.API.Services
             }
         }
 
+        // Return a list of users with summary fields.
         public async Task<IReadOnlyList<UserSummaryDTO>> GetAllAsync()
         {
             _logger.LogInformation("Admin user list retrieval started.");
@@ -98,6 +100,7 @@ namespace DocLocker.API.Services
             return results;
         }
 
+        // Update an existing user after validation.
         public async Task<(bool Success, string? ErrorMessage)> UpdateAsync(int userId, UpdateUserDTO dto)
         {
             try
@@ -141,6 +144,7 @@ namespace DocLocker.API.Services
             }
         }
 
+        // Toggle activation status for non-admin users.
         public async Task<(bool Success, string? ErrorMessage, bool? IsActive)> ToggleActiveAsync(int userId)
         {
             try

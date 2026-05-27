@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 namespace DocLocker.API.Controllers
 {
+    // Document upload and retrieval.
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -13,11 +14,13 @@ namespace DocLocker.API.Controllers
     {
         private readonly IDocumentService _documentService;
 
+        // Initialize with document service.
         public DocumentController(IDocumentService documentService)
         {
             _documentService = documentService;
         }
 
+        // Upload a document file for a request.
         [HttpPost("upload")]
         public async Task<IActionResult> Upload([FromForm] UploadDocumentDTO model)
         {
@@ -40,6 +43,7 @@ namespace DocLocker.API.Controllers
             return Ok(new { message = "Document uploaded successfully", documentId });
         }
 
+        // Return documents for a specific user.
         [HttpGet("user/{userId:int}")]
         public async Task<IActionResult> GetByUser(int userId)
         {

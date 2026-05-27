@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 namespace DocLocker.API.Controllers
 {
+    // Handles authentication operations like registration and login.
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -16,6 +17,7 @@ namespace DocLocker.API.Controllers
         private readonly IConfiguration _config;
         private readonly ILogger<AuthController> _logger;
 
+        // Dependencies for authS.
         public AuthController(DocLockerDbContext context, IConfiguration config, ILogger<AuthController> logger)
         {
             _context = context;
@@ -23,7 +25,7 @@ namespace DocLocker.API.Controllers
             _logger = logger;
         }
 
-        // REGISTER
+        // Register 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
@@ -62,7 +64,7 @@ namespace DocLocker.API.Controllers
             }
         }
 
-        // LOGIN
+        // Log 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
@@ -92,7 +94,7 @@ namespace DocLocker.API.Controllers
             });
         }
 
-        // JWT TOKEN
+        // Create the JWT token.
         private string GenerateJwtToken(User user)
         {
             var roleName = user.Role?.Name ?? string.Empty;

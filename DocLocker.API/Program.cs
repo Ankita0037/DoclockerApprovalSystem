@@ -6,17 +6,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+// Create the application builder and load configuration.
 var builder = WebApplication.CreateBuilder(args);
 
+// Read JWT settings from configuration.
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
+// Validate required JWT settings early.
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
 {
     throw new InvalidOperationException("Jwt:Key must be configured and at least 32 characters long.");
 }
 
+// Validate issuer and audience values.
 if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
 {
     throw new InvalidOperationException("Jwt:Issuer and Jwt:Audience must be configured.");
@@ -31,6 +35,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DocLockerDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register app services and repositories.
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -71,6 +76,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Build the web application.
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -80,11 +86,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Configure middleware pipeline.
 app.UseCors("AllowWebApp");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controller endpoints.
 app.MapControllers();
 
 app.Run();
