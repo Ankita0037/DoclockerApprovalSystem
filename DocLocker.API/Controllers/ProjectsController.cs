@@ -8,7 +8,6 @@ namespace DocLocker.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
@@ -21,6 +20,7 @@ namespace DocLocker.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProject(CreateProjectDTO dto)
         {
             if (!ModelState.IsValid)
@@ -52,6 +52,7 @@ namespace DocLocker.API.Controllers
         }
 
         [HttpPut("{projectId:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateProject(int projectId, UpdateProjectDTO dto)
         {
             if (!ModelState.IsValid)
@@ -77,6 +78,7 @@ namespace DocLocker.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetProjects()
         {
             try
@@ -87,6 +89,34 @@ namespace DocLocker.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Admin project list retrieval failed.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching projects");
+            }
+        }
+
+        [HttpGet("manager/{managerId:int}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetManagerProjects(int managerId)
+        {
+            if (!int.TryParse(User.FindFirstValue("UserId"), out var userId))
+            {
+                _logger.LogWarning("Manager project list retrieval failed due to missing user id claim.");
+                return Unauthorized();
+            }
+
+            if (managerId != userId)
+            {
+                _logger.LogWarning("Manager project list retrieval denied for manager id mismatch. RouteId: {RouteId}, ClaimId: {ClaimId}", managerId, userId);
+                return Forbid();
+            }
+
+            try
+            {
+                var projects = await _projectService.GetForManagerAsync(userId);
+                return Ok(projects);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager project list retrieval failed. ManagerId: {ManagerId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching projects");
             }
         }

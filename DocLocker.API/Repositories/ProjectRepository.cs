@@ -114,5 +114,30 @@ namespace DocLocker.API.Repositories
                 throw;
             }
         }
+
+        public async Task<IReadOnlyList<ProjectSummaryDTO>> GetProjectSummariesForManagerAsync(int managerId)
+        {
+            try
+            {
+                return await (from project in _context.Projects.AsNoTracking()
+                              join manager in _context.ProjectManagers.AsNoTracking()
+                                  on project.ProjectId equals manager.ProjectId
+                              join user in _context.Users.AsNoTracking()
+                                  on manager.ManagerId equals user.UserId
+                              where manager.ManagerId == managerId
+                              select new ProjectSummaryDTO
+                              {
+                                  ProjectId = project.ProjectId,
+                                  Name = project.Name,
+                                  ManagerName = user.FullName,
+                                  Status = project.Status
+                              }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving manager project summaries. ManagerId: {ManagerId}", managerId);
+                throw;
+            }
+        }
     }
 }

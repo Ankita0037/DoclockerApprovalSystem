@@ -1,0 +1,69 @@
+@using DocLocker.Core.Models
+@model IReadOnlyList<ProjectSummaryDTO>
+
+@{
+    ViewData["Title"] = "My Projects";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-folder2-open me-2"></i>My Projects
+    </h2>
+    <p class="text-muted mb-0">Projects assigned to you as a manager.</p>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @TempData["Error"]
+        </div>
+    }
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list me-2"></i>Project List
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-light text-dark">@Model.Count Projects</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox me-2"></i>No projects assigned yet.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var project in Model)
+                            {
+                                <tr>
+                                    <td>@project.Name</td>
+                                    <td>@project.Status</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

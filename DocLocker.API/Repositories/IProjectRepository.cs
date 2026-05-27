@@ -9,5 +9,6 @@ namespace DocLocker.API.Repositories
         Task<int> CreateProjectAsync(Project project, int managerId);
         Task UpdateProjectAsync(Project project, int managerId);
         Task<IReadOnlyList<ProjectSummaryDTO>> GetAllProjectSummariesAsync();
+        Task<IReadOnlyList<ProjectSummaryDTO>> GetProjectSummariesForManagerAsync(int managerId);
     }
 }

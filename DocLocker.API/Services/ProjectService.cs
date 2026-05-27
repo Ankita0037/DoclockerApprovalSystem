@@ -122,5 +122,21 @@ namespace DocLocker.API.Services
                 throw;
             }
         }
+
+        public async Task<IReadOnlyList<ProjectSummaryDTO>> GetForManagerAsync(int managerId)
+        {
+            try
+            {
+                _logger.LogInformation("Manager project list retrieval started. ManagerId: {ManagerId}", managerId);
+                var projects = await _projectRepository.GetProjectSummariesForManagerAsync(managerId);
+                _logger.LogInformation("Manager project list retrieval completed. Count: {Count}", projects.Count);
+                return projects;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager project list retrieval failed. ManagerId: {ManagerId}", managerId);
+                throw;
+            }
+        }
     }
 }
