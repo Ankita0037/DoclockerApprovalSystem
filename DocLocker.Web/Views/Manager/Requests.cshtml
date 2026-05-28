@@ -1,0 +1,65 @@
+@model DocLocker.Web.Models.ManagerDocumentRequestsViewModel
+
+@{
+    ViewData["Title"] = "All Requests";
+    var currentFilter = Model.StatusFilter ?? string.Empty;
+    var filters = new[] { "Pending", "Submitted", "Approved", "Rejected", "RevisionRequested" };
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <!-- This header holds the page title and status filters. -->
+        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-inbox me-2"></i>All Requests
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/Manager/Requests" class="btn btn-sm btn-light @(string.IsNullOrWhiteSpace(currentFilter) ? "active" : "")">
+                    All
+                </a>
+                @foreach (var filter in filters)
+                {
+                    <a href="/Manager/Requests?status=@filter" class="btn btn-sm btn-light @(string.Equals(currentFilter, filter, StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        @filter
+                    </a>
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Requests.Count == 0)
+            {
+                <div class="text-muted text-center py-4">
+                    <i class="bi bi-inbox me-2"></i>No requests found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Project</th>
+                                <th>Member</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.Requests)
+                            {
+                                <tr>
+                                    <td>@request.ProjectName</td>
+                                    <td>@request.MemberName</td>
+                                    <td>@request.Title</td>
+                                    <td>@request.Status</td>
+                                    <td>@(request.DueDate?.ToString("d") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

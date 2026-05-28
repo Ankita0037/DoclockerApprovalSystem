@@ -38,6 +38,8 @@ builder.Services.AddDbContext<DocLockerDbContext>(options =>
 // Register app services and repositories.
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentRequestService, DocumentRequestService>();
+builder.Services.AddScoped<IDocumentRequestRepository, DocumentRequestRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();

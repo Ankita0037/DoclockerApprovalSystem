@@ -166,5 +166,94 @@ namespace DocLocker.Web.Controllers
 
             return RedirectToAction(nameof(MyProjects));
         }
+
+        // Create a document request for a project member.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateDocumentRequest(CreateDocumentRequestDTO dto)
+        {
+            // Log the document request submission attempt.
+            _logger.LogInformation("Manager submitted document request form. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Document request form validation failed. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
+                TempData["Error"] = "Please correct the form errors.";
+                return RedirectToAction(nameof(MyProjects));
+            }
+
+            if (!TrySetBearerToken(out _))
+            {
+                _logger.LogWarning("Document request creation failed due to missing session token.");
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/documentrequests", dto);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Failed to create document request. ProjectId: {ProjectId}, MemberId: {MemberId}, Status: {StatusCode}", dto.ProjectId, dto.MemberId, response.StatusCode);
+                    TempData["Error"] = string.IsNullOrWhiteSpace(errorContent) ? "Unable to create document request." : errorContent;
+                }
+                else
+                {
+                    _logger.LogInformation("Document request created successfully. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
+                    TempData["Success"] = "Document request created successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating document request. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
+                TempData["Error"] = "An error occurred while creating the document request.";
+            }
+
+            return RedirectToAction(nameof(MyProjects));
+        }
+
+        // Show all document requests created by the manager.
+        public async Task<IActionResult> Requests(string? status)
+        {
+            if (!TrySetBearerToken(out _))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var viewModel = new ManagerDocumentRequestsViewModel
+            {
+                StatusFilter = status
+            };
+
+            try
+            {
+                _logger.LogInformation("Loading manager document requests. StatusFilter: {StatusFilter}", status);
+                var response = await _httpClient.GetAsync("api/documentrequests/manager");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to load manager document requests. Status code: {StatusCode}", response.StatusCode);
+                    TempData["Error"] = "Unable to load document requests. Please try again.";
+                    return View(viewModel);
+                }
+
+                var requests = await response.Content.ReadFromJsonAsync<List<DocumentRequestSummaryDTO>>() ?? new List<DocumentRequestSummaryDTO>();
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    requests = requests
+                        .Where(request => string.Equals(request.Status, status, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                viewModel.Requests = requests;
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading manager document requests.");
+                TempData["Error"] = "An error occurred while loading document requests.";
+                return View(viewModel);
+            }
+        }
     }
 }

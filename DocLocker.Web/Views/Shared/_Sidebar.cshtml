@@ -5,6 +5,7 @@
     var isAssignmentStatusActive = currentAction == "MyDocuments" && currentController == "Member" && !string.IsNullOrWhiteSpace(statusFilter);
     var allowUserManagement = string.Equals(Context.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
     var isAdminRequestMenuActive = currentAction == "Requests" && currentController == "Admin";
+    var isManagerRequestMenuActive = currentAction == "Requests" && currentController == "Manager";
 }
 
 <aside class="sidebar-nav p-0">
@@ -62,6 +63,9 @@
             </a>
             <a href="/Manager/MyProjects" class="sidebar-nav-link @(currentAction == "MyProjects" && currentController == "Manager" ? "active" : "") mb-2">
                 <i class="bi bi-folder2-open me-2"></i>My Projects
+            </a>
+            <a href="/Manager/Requests" class="sidebar-nav-link @(isManagerRequestMenuActive ? "active" : "") mb-2">
+                <i class="bi bi-inbox me-2"></i>All Requests
             </a>
         }
 

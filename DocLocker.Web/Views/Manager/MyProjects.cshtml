@@ -45,9 +45,12 @@
                                 <tr>
                                     <td>@projectEntry.Project.Name</td>
                                     <td>@projectEntry.Project.Status</td>
-                                    <td>
+                                    <td class="d-flex flex-wrap gap-2">
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#manageMembersModal-@projectEntry.Project.ProjectId">
                                             Manage Members
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createRequestModal-@projectEntry.Project.ProjectId">
+                                            Create Request
                                         </button>
                                     </td>
                                 </tr>
@@ -114,6 +117,57 @@
                                 </li>
                             }
                         </ul>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createRequestModal-@projectEntry.Project.ProjectId" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Request - @projectEntry.Project.Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- This modal only handles creating a document request. -->
+                    @if (projectEntry.AssignedMembers.Count == 0)
+                    {
+                        <div class="text-muted">Assign a member before creating a document request.</div>
+                    }
+                    else
+                    {
+                        <form asp-action="CreateDocumentRequest" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ProjectId" value="@projectEntry.Project.ProjectId" />
+                            <div class="col-12">
+                                <label class="form-label">Member</label>
+                                <select class="form-select" name="MemberId" required>
+                                    <option value="">Select member</option>
+                                    @foreach (var member in projectEntry.AssignedMembers)
+                                    {
+                                        <option value="@member.UserId">@member.Name (@member.Email)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Title</label>
+                                <input class="form-control" name="Title" maxlength="200" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="Description" rows="3" maxlength="1000"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Due Date</label>
+                                <input class="form-control" type="date" name="DueDate" />
+                            </div>
+                            <div class="col-12 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">Create Request</button>
+                            </div>
+                        </form>
                     }
                 </div>
             </div>
