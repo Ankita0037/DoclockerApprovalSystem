@@ -40,9 +40,12 @@
                         }
                         else
                         {
-                            foreach (var projectEntry in Model.Projects)
-                            {
-                                <tr>
+    foreach (var projectEntry in Model.Projects)
+    {
+        var isRequestFormActive = Model.ActiveRequestProjectId == projectEntry.Project.ProjectId;
+        var requestForm = isRequestFormActive ? Model.RequestForm : null;
+
+        <tr>
                                     <td>@projectEntry.Project.Name</td>
                                     <td>@projectEntry.Project.Status</td>
                                     <td class="d-flex flex-wrap gap-2">
@@ -65,6 +68,9 @@
 
 @foreach (var projectEntry in Model.Projects)
 {
+    var isRequestFormActive = Model.ActiveRequestProjectId == projectEntry.Project.ProjectId;
+    var requestForm = isRequestFormActive ? Model.RequestForm : null;
+
     <div class="modal fade" id="manageMembersModal-@projectEntry.Project.ProjectId" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -139,30 +145,52 @@
                     }
                     else
                     {
-                        <form asp-action="CreateDocumentRequest" method="post" class="row g-3">
+                        <form asp-action="CreateDocumentRequest" method="post" class="row g-3" novalidate>
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ProjectId" value="@projectEntry.Project.ProjectId" />
+                            @if (isRequestFormActive)
+                            {
+                                <div class="col-12">
+                                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                </div>
+                            }
                             <div class="col-12">
                                 <label class="form-label">Member</label>
-                                <select class="form-select" name="MemberId" required>
+                                <select class="form-select @(isRequestFormActive && ViewData.ModelState["MemberId"]?.Errors.Count > 0 ? "is-invalid" : "")" name="MemberId" required>
                                     <option value="">Select member</option>
                                     @foreach (var member in projectEntry.AssignedMembers)
                                     {
-                                        <option value="@member.UserId">@member.Name (@member.Email)</option>
+                                        <option value="@member.UserId" selected="@(requestForm?.MemberId == member.UserId)">@member.Name (@member.Email)</option>
                                     }
                                 </select>
+                                @if (isRequestFormActive)
+                                {
+                                    <span class="text-danger small">@Html.ValidationMessage("MemberId")</span>
+                                }
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Title</label>
-                                <input class="form-control" name="Title" maxlength="200" required />
+                                <input class="form-control @(isRequestFormActive && ViewData.ModelState["Title"]?.Errors.Count > 0 ? "is-invalid" : "")" name="Title" maxlength="200" value="@requestForm?.Title" required />
+                                @if (isRequestFormActive)
+                                {
+                                    <span class="text-danger small">@Html.ValidationMessage("Title")</span>
+                                }
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
-                                <textarea class="form-control" name="Description" rows="3" maxlength="1000"></textarea>
+                                <textarea class="form-control @(isRequestFormActive && ViewData.ModelState["Description"]?.Errors.Count > 0 ? "is-invalid" : "")" name="Description" rows="3" maxlength="1000">@requestForm?.Description</textarea>
+                                @if (isRequestFormActive)
+                                {
+                                    <span class="text-danger small">@Html.ValidationMessage("Description")</span>
+                                }
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Due Date</label>
-                                <input class="form-control" type="date" name="DueDate" />
+                                <input class="form-control @(isRequestFormActive && ViewData.ModelState["DueDate"]?.Errors.Count > 0 ? "is-invalid" : "")" type="date" name="DueDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" value="@(requestForm?.DueDate?.ToString("yyyy-MM-dd"))" />
+                                @if (isRequestFormActive)
+                                {
+                                    <span class="text-danger small">@Html.ValidationMessage("DueDate")</span>
+                                }
                             </div>
                             <div class="col-12 d-flex justify-content-end">
                                 <button type="submit" class="btn btn-primary">Create Request</button>
@@ -173,4 +201,18 @@
             </div>
         </div>
     </div>
+}
+
+@if (Model.ActiveRequestProjectId.HasValue)
+{
+    @section Scripts {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const modalElement = document.getElementById('createRequestModal-@Model.ActiveRequestProjectId.Value');
+                if (modalElement) {
+                    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                }
+            });
+        </script>
+    }
 }

@@ -121,5 +121,22 @@ namespace DocLocker.API.Services
                 throw;
             }
         }
+
+        // Return requests assigned to the member.
+        public async Task<IReadOnlyList<MemberDocumentRequestSummaryDTO>> GetForMemberAsync(int memberId)
+        {
+            try
+            {
+                _logger.LogInformation("Member request list retrieval started. MemberId: {MemberId}", memberId);
+                var requests = await _documentRequestRepository.GetForMemberAsync(memberId);
+                _logger.LogInformation("Member request list retrieval completed. MemberId: {MemberId}, Count: {Count}", memberId, requests.Count);
+                return requests;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Member request list retrieval failed. MemberId: {MemberId}", memberId);
+                throw;
+            }
+        }
     }
 }

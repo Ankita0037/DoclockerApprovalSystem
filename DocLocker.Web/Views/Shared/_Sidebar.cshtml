@@ -2,7 +2,6 @@
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
     var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
     var statusFilter = Context.Request.Query["status"].ToString() ?? "";
-    var isAssignmentStatusActive = currentAction == "MyDocuments" && currentController == "Member" && !string.IsNullOrWhiteSpace(statusFilter);
     var allowUserManagement = string.Equals(Context.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
     var isAdminRequestMenuActive = currentAction == "Requests" && currentController == "Admin";
     var isManagerRequestMenuActive = currentAction == "Requests" && currentController == "Manager";
@@ -16,41 +15,9 @@
             <a href="/Member/Index" class="sidebar-nav-link @(currentAction == "Index" && currentController == "Member" ? "active" : "") mb-2">
                 <i class="bi bi-house me-2"></i>Dashboard
             </a>
-            <a href="/Member/Upload" class="sidebar-nav-link @(currentAction == "Upload" && currentController == "Member" ? "active" : "") mb-2">
-                <i class="bi bi-cloud-arrow-up me-2"></i>Upload Document
+            <a href="/Member/Requests" class="sidebar-nav-link @(currentAction == "Requests" && currentController == "Member" ? "active" : "") mb-2">
+                <i class="bi bi-inbox me-2"></i>My Requests
             </a>
-            <a href="/Member/MyDocuments" class="sidebar-nav-link @(currentAction == "MyDocuments" && currentController == "Member" ? "active" : "") mb-2">
-                <i class="bi bi-file-earmark me-2"></i>My Documents
-            </a>
-            <a class="sidebar-nav-link mb-2 d-flex justify-content-between align-items-center"
-               data-bs-toggle="collapse"
-               href="#assignmentStatusMenu"
-               role="button"
-               aria-expanded="@(isAssignmentStatusActive.ToString().ToLowerInvariant())"
-               aria-controls="assignmentStatusMenu">
-                <span><i class="bi bi-clipboard-check me-2"></i>Assignment Status</span>
-                <i class="bi bi-chevron-down small"></i>
-            </a>
-            <div class="collapse @(isAssignmentStatusActive ? "show" : "")" id="assignmentStatusMenu">
-                <a href="/Member/MyDocuments?status=Draft" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "Draft" ? "active" : "") mb-2">
-                    Draft
-                </a>
-                <a href="/Member/MyDocuments?status=Unassigned" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "Unassigned" ? "active" : "") mb-2">
-                    Unassigned
-                </a>
-                <a href="/Member/MyDocuments?status=Pending" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "Pending" ? "active" : "") mb-2">
-                    Pending
-                </a>
-                <a href="/Member/MyDocuments?status=RevisionRequested" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "RevisionRequested" ? "active" : "") mb-2">
-                    Revision Requested
-                </a>
-                <a href="/Member/MyDocuments?status=Approved" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "Approved" ? "active" : "") mb-2">
-                    Approved
-                </a>
-                <a href="/Member/MyDocuments?status=Rejected" class="sidebar-nav-link ps-4 @(currentAction == "MyDocuments" && currentController == "Member" && statusFilter == "Rejected" ? "active" : "") mb-2">
-                    Rejected
-                </a>
-            </div>
         }
 
         @if (Context.Session.GetString("Role") == "Manager")

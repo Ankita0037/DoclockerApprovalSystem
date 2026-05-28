@@ -13,5 +13,8 @@ namespace DocLocker.API.Repositories
 
         // Return requests created by a manager.
         Task<IReadOnlyList<DocumentRequestSummaryDTO>> GetForManagerAsync(int managerId);
+
+        // Return requests assigned to a member.
+        Task<IReadOnlyList<MemberDocumentRequestSummaryDTO>> GetForMemberAsync(int memberId);
     }
 }

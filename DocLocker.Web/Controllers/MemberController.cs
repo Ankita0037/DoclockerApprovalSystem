@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using DocLocker.Web.Filters;
+using DocLocker.Web.Models;
+using DocLocker.Core.Models;
 
 namespace DocLocker.Web.Controllers
 {
@@ -38,67 +41,67 @@ namespace DocLocker.Web.Controllers
 
         public IActionResult Upload()
         {
-            return View();
+            return RedirectToAction(nameof(Requests));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(IFormFile file, [FromForm] string fileName)
         {
-            if (file == null || file.Length == 0)
-            {
-                ModelState.AddModelError("File", "Please select a file to upload");
-                return View();
-            }
-
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                ModelState.AddModelError("FileName", "Document title is required");
-                return View();
-            }
-
-            try
-            {
-                var content = new MultipartFormDataContent();
-                content.Add(new StringContent(fileName), "FileName");
-
-                var fileContent = new StreamContent(file.OpenReadStream());
-                fileContent.Headers.ContentType =
-                    new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-
-                content.Add(fileContent, "File", file.FileName);
-
-                SetAuthorizationHeader();
-                var response = await _httpClient.PostAsync("api/document/upload", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["Success"] = "Document uploaded successfully!";
-                    return RedirectToAction("Index");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    HttpContext.Session.Clear();
-                    return RedirectToAction("Login", "Account");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    ModelState.AddModelError("", $"Upload failed: {errorContent}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error uploading document");
-                ModelState.AddModelError("", "An error occurred while uploading. Please try again.");
-            }
-
-            return View();
+            await Task.CompletedTask;
+            TempData["Error"] = "Upload is not available yet.";
+            return RedirectToAction(nameof(Requests));
         }
 
         public IActionResult MyDocuments()
         {
-            return View();
+            return RedirectToAction(nameof(Requests));
+        }
+
+        // Show document requests assigned to the member.
+        public async Task<IActionResult> Requests()
+        {
+            var token = GetAuthToken();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var viewModel = new MemberDocumentRequestsViewModel();
+
+            try
+            {
+                _logger.LogInformation("Loading member document requests.");
+                SetAuthorizationHeader();
+                var response = await _httpClient.GetAsync("api/documentrequests/member");
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    HttpContext.Session.Clear();
+                    return RedirectToAction("Login", "Account");
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to load member document requests. Status code: {StatusCode}", response.StatusCode);
+                    TempData["Error"] = "Unable to load document requests. Please try again.";
+                    return View(viewModel);
+                }
+
+                var requests = await response.Content.ReadFromJsonAsync<List<MemberDocumentRequestSummaryDTO>>() ?? new List<MemberDocumentRequestSummaryDTO>();
+                viewModel.Requests = requests;
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading member document requests.");
+                TempData["Error"] = "An error occurred while loading document requests.";
+                return View(viewModel);
+            }
         }
     }
 }

@@ -1,0 +1,101 @@
+@model DocLocker.Web.Models.MemberDocumentRequestsViewModel
+
+@{
+    ViewData["Title"] = "My Requests";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-inbox me-2"></i>My Requests
+    </h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-list-check me-2"></i>Assigned Document Requests
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Requests.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox me-2"></i>No assigned requests found.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var request in Model.Requests)
+                            {
+                                var canUpload = string.Equals(request.Status, "Pending", StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(request.Status, "RevisionRequested", StringComparison.OrdinalIgnoreCase);
+
+                                <tr>
+                                    <td>@request.ProjectName</td>
+                                    <td class="fw-semibold">@request.Title</td>
+                                    <td>@request.Description</td>
+                                    <td>
+                                        <span class="badge bg-@GetStatusBadge(request.Status)">
+                                            @request.Status
+                                        </span>
+                                    </td>
+                                    <td>@(request.DueDate.HasValue ? request.DueDate.Value.ToString("dd MMM yyyy") : "No due date")</td>
+                                    <td class="text-end">
+                                        @if (canUpload)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-primary" disabled>
+                                                <i class="bi bi-cloud-arrow-up me-1"></i>Upload
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Pending" => "warning text-dark",
+            "Submitted" => "info text-dark",
+            "Approved" => "success",
+            "Rejected" => "danger",
+            "RevisionRequested" => "secondary",
+            _ => "light text-dark"
+        };
+    }
+}

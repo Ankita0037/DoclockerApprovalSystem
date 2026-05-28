@@ -54,48 +54,15 @@ namespace DocLocker.Web.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var viewModel = new ManagerProjectsViewModel();
-
             try
             {
-                var response = await _httpClient.GetAsync($"api/projects/manager/{managerId}");
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogWarning("Failed to load manager projects. Status code: {StatusCode}", response.StatusCode);
-                    TempData["Error"] = "Unable to load projects. Please try again.";
-                    return View(viewModel);
-                }
-
-                var projects = await response.Content.ReadFromJsonAsync<List<ProjectSummaryDTO>>() ?? new List<ProjectSummaryDTO>();
-                foreach (var project in projects)
-                {
-                    var memberResponse = await _httpClient.GetAsync($"api/projects/{project.ProjectId}/members");
-                    if (!memberResponse.IsSuccessStatusCode)
-                    {
-                        _logger.LogWarning("Failed to load project members. ProjectId: {ProjectId}, StatusCode: {StatusCode}", project.ProjectId, memberResponse.StatusCode);
-                        viewModel.Projects.Add(new ManagerProjectMembersViewModel
-                        {
-                            Project = project
-                        });
-                        continue;
-                    }
-
-                    var members = await memberResponse.Content.ReadFromJsonAsync<ProjectMembersViewDTO>() ?? new ProjectMembersViewDTO();
-                    viewModel.Projects.Add(new ManagerProjectMembersViewModel
-                    {
-                        Project = project,
-                        AssignedMembers = members.AssignedMembers,
-                        AvailableMembers = members.AvailableMembers
-                    });
-                }
-
-                return View(viewModel);
+                return View(await BuildManagerProjectsViewModelAsync(managerId));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading manager projects.");
                 TempData["Error"] = "An error occurred while loading projects.";
-                return View(viewModel);
+                return View(new ManagerProjectsViewModel());
             }
         }
 
@@ -178,8 +145,13 @@ namespace DocLocker.Web.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Document request form validation failed. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
-                TempData["Error"] = "Please correct the form errors.";
-                return RedirectToAction(nameof(MyProjects));
+                return await ReturnMyProjectsWithRequestErrorsAsync(dto);
+            }
+
+            if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.Today)
+            {
+                ModelState.AddModelError(nameof(CreateDocumentRequestDTO.DueDate), "Due date cannot be in the past");
+                return await ReturnMyProjectsWithRequestErrorsAsync(dto);
             }
 
             if (!TrySetBearerToken(out _))
@@ -196,7 +168,8 @@ namespace DocLocker.Web.Controllers
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogWarning("Failed to create document request. ProjectId: {ProjectId}, MemberId: {MemberId}, Status: {StatusCode}", dto.ProjectId, dto.MemberId, response.StatusCode);
-                    TempData["Error"] = string.IsNullOrWhiteSpace(errorContent) ? "Unable to create document request." : errorContent;
+                    ModelState.AddModelError(string.Empty, string.IsNullOrWhiteSpace(errorContent) ? "Unable to create document request." : errorContent);
+                    return await ReturnMyProjectsWithRequestErrorsAsync(dto);
                 }
                 else
                 {
@@ -211,6 +184,64 @@ namespace DocLocker.Web.Controllers
             }
 
             return RedirectToAction(nameof(MyProjects));
+        }
+
+        private async Task<ManagerProjectsViewModel> BuildManagerProjectsViewModelAsync(string managerId)
+        {
+            var viewModel = new ManagerProjectsViewModel();
+            var response = await _httpClient.GetAsync($"api/projects/manager/{managerId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to load manager projects. Status code: {StatusCode}", response.StatusCode);
+                TempData["Error"] = "Unable to load projects. Please try again.";
+                return viewModel;
+            }
+
+            var projects = await response.Content.ReadFromJsonAsync<List<ProjectSummaryDTO>>() ?? new List<ProjectSummaryDTO>();
+            foreach (var project in projects)
+            {
+                var memberResponse = await _httpClient.GetAsync($"api/projects/{project.ProjectId}/members");
+                if (!memberResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to load project members. ProjectId: {ProjectId}, StatusCode: {StatusCode}", project.ProjectId, memberResponse.StatusCode);
+                    viewModel.Projects.Add(new ManagerProjectMembersViewModel
+                    {
+                        Project = project
+                    });
+                    continue;
+                }
+
+                var members = await memberResponse.Content.ReadFromJsonAsync<ProjectMembersViewDTO>() ?? new ProjectMembersViewDTO();
+                viewModel.Projects.Add(new ManagerProjectMembersViewModel
+                {
+                    Project = project,
+                    AssignedMembers = members.AssignedMembers,
+                    AvailableMembers = members.AvailableMembers
+                });
+            }
+
+            return viewModel;
+        }
+
+        private async Task<IActionResult> ReturnMyProjectsWithRequestErrorsAsync(CreateDocumentRequestDTO dto)
+        {
+            TempData["Error"] = "Please correct the highlighted request fields.";
+
+            if (!TrySetBearerToken(out _))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var managerId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrWhiteSpace(managerId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var viewModel = await BuildManagerProjectsViewModelAsync(managerId);
+            viewModel.ActiveRequestProjectId = dto.ProjectId;
+            viewModel.RequestForm = dto;
+            return View("MyProjects", viewModel);
         }
 
         // Show all document requests created by the manager.

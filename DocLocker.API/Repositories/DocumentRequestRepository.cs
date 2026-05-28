@@ -79,5 +79,32 @@ namespace DocLocker.API.Repositories
                 throw;
             }
         }
+
+        // Return requests assigned to a member.
+        public async Task<IReadOnlyList<MemberDocumentRequestSummaryDTO>> GetForMemberAsync(int memberId)
+        {
+            try
+            {
+                return await _context.DocumentRequests
+                    .AsNoTracking()
+                    .Where(request => request.MemberId == memberId)
+                    .Select(request => new MemberDocumentRequestSummaryDTO
+                    {
+                        DocumentRequestId = request.DocumentRequestId,
+                        ProjectName = request.Project.Name,
+                        Title = request.Title,
+                        Description = request.Description,
+                        Status = request.Status.Name,
+                        DueDate = request.DueDate
+                    })
+                    .OrderByDescending(request => request.DocumentRequestId)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving member document requests. MemberId: {MemberId}", memberId);
+                throw;
+            }
+        }
     }
 }

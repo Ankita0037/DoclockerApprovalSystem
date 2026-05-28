@@ -9,7 +9,7 @@ namespace DocLocker.API.Controllers
     // Document requests for managers.
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Manager")]
+    [Authorize]
     public class DocumentRequestsController : ControllerBase
     {
         private readonly IDocumentRequestService _documentRequestService;
@@ -24,6 +24,7 @@ namespace DocLocker.API.Controllers
 
         // Create a new document request for a project member.
         [HttpPost]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> CreateDocumentRequest(CreateDocumentRequestDTO dto)
         {
             // Log the incoming create request call.
@@ -68,6 +69,7 @@ namespace DocLocker.API.Controllers
 
         // Return document requests created by the manager.
         [HttpGet("manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetManagerRequests()
         {
             if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
@@ -84,6 +86,29 @@ namespace DocLocker.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Manager request list retrieval failed. ManagerId: {ManagerId}", managerId);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching requests");
+            }
+        }
+
+        // Return document requests assigned to the member.
+        [HttpGet("member")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetMemberRequests()
+        {
+            if (!int.TryParse(User.FindFirstValue("UserId"), out var memberId))
+            {
+                _logger.LogWarning("Member request list retrieval failed due to missing user id claim.");
+                return Unauthorized();
+            }
+
+            try
+            {
+                var requests = await _documentRequestService.GetForMemberAsync(memberId);
+                return Ok(requests);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Member request list retrieval failed. MemberId: {MemberId}", memberId);
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching requests");
             }
         }
