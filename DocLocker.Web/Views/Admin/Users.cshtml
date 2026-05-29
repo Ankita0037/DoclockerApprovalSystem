@@ -111,6 +111,11 @@
                                 </tr>
                             }
                         }
+                        <tr id="noUsersMatchRow" class="d-none">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-search me-2"></i>No users match the selected filters.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -237,63 +242,94 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Search filter
-        document.getElementById('searchInput')?.addEventListener('keyup', function (e) {
-            const searchValue = e.target.value.toLowerCase();
-            applyFilters(searchValue, document.getElementById('roleFilter')?.value, document.getElementById('statusFilter')?.value);
-        });
+        const pageSize = 8;
+        let currentPage = 1;
+        let filteredRows = [];
 
-        // Role filter
-        document.getElementById('roleFilter')?.addEventListener('change', function (e) {
-            applyFilters(document.getElementById('searchInput')?.value, e.target.value, document.getElementById('statusFilter')?.value);
-        });
+        const searchInput = document.getElementById('searchInput');
+        const roleFilter = document.getElementById('roleFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const previousButton = document.getElementById('prevPage');
+        const nextButton = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const noUsersMatchRow = document.getElementById('noUsersMatchRow');
 
-        document.getElementById('statusFilter')?.addEventListener('change', function (e) {
-            applyFilters(document.getElementById('searchInput')?.value, document.getElementById('roleFilter')?.value, e.target.value);
-        });
+        function getUserRows() {
+            return Array.from(document.querySelectorAll('#usersTable tr[data-name][data-email][data-role][data-status]'));
+        }
 
-        function applyFilters(searchValue, roleValue, statusValue) {
-            const search = (searchValue ?? '').toLowerCase();
-            const role = (roleValue ?? '').toLowerCase();
-            const status = (statusValue ?? '').toLowerCase();
-            document.querySelectorAll('#usersTable tr').forEach(function (row) {
-                const rowName = row.getAttribute('data-name')?.toLowerCase() ?? '';
-                const rowEmail = row.getAttribute('data-email')?.toLowerCase() ?? '';
-                const rowRole = row.getAttribute('data-role')?.toLowerCase() ?? '';
-                const rowStatus = row.getAttribute('data-status')?.toLowerCase() ?? '';
+        function applyFilters() {
+            const search = (searchInput?.value ?? '').trim().toLowerCase();
+            const role = (roleFilter?.value ?? '').toLowerCase();
+            const status = (statusFilter?.value ?? '').toLowerCase();
+
+            filteredRows = getUserRows().filter(row => {
+                const rowName = row.dataset.name?.toLowerCase() ?? '';
+                const rowEmail = row.dataset.email?.toLowerCase() ?? '';
+                const rowRole = row.dataset.role?.toLowerCase() ?? '';
+                const rowStatus = row.dataset.status?.toLowerCase() ?? '';
+
                 const matchesSearch = !search || rowName.includes(search) || rowEmail.includes(search);
                 const matchesRole = !role || rowRole === role;
                 const matchesStatus = !status || rowStatus === status;
-                row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+
+                return matchesSearch && matchesRole && matchesStatus;
             });
-            updatePagination();
+
+            currentPage = 1;
+            renderPage();
         }
 
-        const pageSize = 8;
-        let currentPage = 1;
-
-        function updatePagination() {
-            const rows = Array.from(document.querySelectorAll('#usersTable tr')).filter(row => row.style.display !== 'none');
-            const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+        function renderPage() {
+            const allRows = getUserRows();
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
             currentPage = Math.min(currentPage, totalPages);
-            rows.forEach((row, index) => {
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                row.style.display = index >= start && index < end ? '' : 'none';
+
+            allRows.forEach(row => row.style.display = 'none');
+
+            const start = (currentPage - 1) * pageSize;
+            const currentRows = filteredRows.slice(start, start + pageSize);
+            currentRows.forEach(row => {
+                row.style.display = '';
             });
-            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-            document.getElementById('prevPage').disabled = currentPage <= 1;
-            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+            if (noUsersMatchRow) {
+                noUsersMatchRow.classList.toggle('d-none', filteredRows.length > 0);
+            }
+
+            if (paginationContainer) {
+                paginationContainer.classList.toggle('d-none', allRows.length <= pageSize && filteredRows.length === allRows.length);
+            }
+
+            if (pageInfo) {
+                pageInfo.textContent = filteredRows.length === 0
+                    ? 'No users to display'
+                    : `Page ${currentPage} of ${totalPages} (${filteredRows.length} users)`;
+            }
+
+            if (previousButton) {
+                previousButton.disabled = currentPage <= 1 || filteredRows.length === 0;
+            }
+
+            if (nextButton) {
+                nextButton.disabled = currentPage >= totalPages || filteredRows.length === 0;
+            }
         }
 
-        document.getElementById('prevPage')?.addEventListener('click', function () {
+        searchInput?.addEventListener('input', applyFilters);
+        roleFilter?.addEventListener('change', applyFilters);
+        statusFilter?.addEventListener('change', applyFilters);
+
+        previousButton?.addEventListener('click', function () {
             currentPage = Math.max(1, currentPage - 1);
-            updatePagination();
+            renderPage();
         });
 
-        document.getElementById('nextPage')?.addEventListener('click', function () {
-            currentPage = currentPage + 1;
-            updatePagination();
+        nextButton?.addEventListener('click', function () {
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+            currentPage = Math.min(totalPages, currentPage + 1);
+            renderPage();
         });
 
         const createRoleSelect = document.getElementById('createRoleId');
@@ -343,6 +379,6 @@
             }
         });
 
-        updatePagination();
+        applyFilters();
     </script>
 }

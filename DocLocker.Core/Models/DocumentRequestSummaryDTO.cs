@@ -15,6 +15,9 @@ namespace DocLocker.Core.Models
         // Request title.
         public string Title { get; set; } = string.Empty;
 
+        // Request details.
+        public string Description { get; set; } = string.Empty;
+
         // Status name for the request.
         public string Status { get; set; } = string.Empty;
 

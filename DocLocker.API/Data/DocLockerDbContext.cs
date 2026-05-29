@@ -135,7 +135,8 @@ namespace DocLocker.API.Data
                 new DocumentRequestStatus { DocumentRequestStatusId = 2, Name = "Submitted" },
                 new DocumentRequestStatus { DocumentRequestStatusId = 3, Name = "Approved" },
                 new DocumentRequestStatus { DocumentRequestStatusId = 4, Name = "Rejected" },
-                new DocumentRequestStatus { DocumentRequestStatusId = 5, Name = "RevisionRequested" }
+                new DocumentRequestStatus { DocumentRequestStatusId = 5, Name = "RevisionRequested" },
+                new DocumentRequestStatus { DocumentRequestStatusId = 6, Name = "Cancelled" }
             );
         }
     }

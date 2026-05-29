@@ -112,5 +112,96 @@ namespace DocLocker.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching requests");
             }
         }
+
+        // Update an existing pending document request.
+        [HttpPut("{documentRequestId:int}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> UpdateDocumentRequest(int documentRequestId, UpdateDocumentRequestDTO dto)
+        {
+            _logger.LogInformation("Manager request update API called. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Manager request update failed due to invalid model state. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                return BadRequest(ModelState);
+            }
+
+            if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
+            {
+                _logger.LogWarning("Manager document request update failed due to missing user id claim.");
+                return Unauthorized();
+            }
+
+            try
+            {
+                var result = await _documentRequestService.UpdateAsync(documentRequestId, dto, managerId);
+                if (!result.Success)
+                {
+                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("Manager request update forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                        return Forbid();
+                    }
+
+                    _logger.LogWarning("Manager request update failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
+                    return BadRequest(result.ErrorMessage);
+                }
+
+                _logger.LogInformation("Manager request update succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager document request update failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the document request");
+            }
+        }
+
+        // Cancel a pending document request without deleting it.
+        [HttpPatch("{documentRequestId:int}/cancel")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> CancelDocumentRequest(int documentRequestId)
+        {
+            _logger.LogInformation("Manager request cancellation API called. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+
+            if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
+            {
+                _logger.LogWarning("Manager document request cancellation failed due to missing user id claim.");
+                return Unauthorized();
+            }
+
+            try
+            {
+                var result = await _documentRequestService.CancelAsync(documentRequestId, managerId);
+                if (!result.Success)
+                {
+                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("Manager request cancellation forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                        return Forbid();
+                    }
+
+                    _logger.LogWarning("Manager request cancellation failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
+                    return BadRequest(result.ErrorMessage);
+                }
+
+                _logger.LogInformation("Manager request cancellation succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager document request cancellation failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while cancelling the document request");
+            }
+        }
+
+        // Deleting document requests is intentionally not supported.
+        [HttpDelete("{documentRequestId:int}")]
+        [Authorize(Roles = "Manager")]
+        public IActionResult DeleteDocumentRequest(int documentRequestId)
+        {
+            _logger.LogWarning("Delete document request API rejected. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+            return StatusCode(StatusCodes.Status405MethodNotAllowed, "Document requests cannot be deleted. Cancel pending requests instead.");
+        }
     }
 }

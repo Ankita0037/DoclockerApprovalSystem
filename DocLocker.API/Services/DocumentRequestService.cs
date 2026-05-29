@@ -7,6 +7,7 @@ namespace DocLocker.API.Services
     public class DocumentRequestService : IDocumentRequestService
     {
         private const string PendingStatusName = "Pending";
+        private const string CancelledStatusName = "Cancelled";
         private readonly IDocumentRequestRepository _documentRequestRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ILogger<DocumentRequestService> _logger;
@@ -101,6 +102,114 @@ namespace DocLocker.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Manager document request creation failed. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
+                throw;
+            }
+        }
+
+        // Update editable fields on a pending request.
+        public async Task<(bool Success, string? ErrorMessage)> UpdateAsync(int documentRequestId, UpdateDocumentRequestDTO dto, int managerId)
+        {
+            try
+            {
+                var normalizedTitle = dto.Title?.Trim();
+                var normalizedDescription = dto.Description?.Trim();
+
+                _logger.LogInformation("Manager document request update started. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+
+                if (string.IsNullOrWhiteSpace(normalizedTitle))
+                {
+                    _logger.LogWarning("Document request update failed due to empty title. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                    return (false, "Title is required");
+                }
+
+                if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.Today)
+                {
+                    _logger.LogWarning("Document request update failed due to past due date. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                    return (false, "Due date cannot be in the past");
+                }
+
+                var request = await _documentRequestRepository.GetByIdAsync(documentRequestId);
+                if (request == null)
+                {
+                    _logger.LogWarning("Document request update failed. Request not found: {DocumentRequestId}", documentRequestId);
+                    return (false, "Document request not found");
+                }
+
+                if (request.RequestedByManagerId != managerId)
+                {
+                    _logger.LogWarning("Document request update forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                    return (false, "FORBIDDEN");
+                }
+
+                if (!string.Equals(request.Status.Name, PendingStatusName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Document request update blocked because request is not pending. DocumentRequestId: {DocumentRequestId}, Status: {Status}", documentRequestId, request.Status.Name);
+                    return (false, "Only pending requests can be edited");
+                }
+
+                request.Title = normalizedTitle!;
+                request.Description = normalizedDescription ?? string.Empty;
+                request.DueDate = dto.DueDate;
+
+                await _documentRequestRepository.UpdateAsync(request);
+
+                _logger.LogInformation("Manager document request update completed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager document request update failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                throw;
+            }
+        }
+
+        // Cancel a pending request without deleting it.
+        public async Task<(bool Success, string? ErrorMessage)> CancelAsync(int documentRequestId, int managerId)
+        {
+            try
+            {
+                _logger.LogInformation("Manager document request cancellation started. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+
+                var request = await _documentRequestRepository.GetByIdAsync(documentRequestId);
+                if (request == null)
+                {
+                    _logger.LogWarning("Document request cancellation failed. Request not found: {DocumentRequestId}", documentRequestId);
+                    return (false, "Document request not found");
+                }
+
+                if (request.RequestedByManagerId != managerId)
+                {
+                    _logger.LogWarning("Document request cancellation forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                    return (false, "FORBIDDEN");
+                }
+
+                if (!string.Equals(request.Status.Name, PendingStatusName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Document request cancellation blocked because request is not pending. DocumentRequestId: {DocumentRequestId}, Status: {Status}", documentRequestId, request.Status.Name);
+                    return (false, "Only pending requests can be cancelled");
+                }
+
+                var cancelledStatus = await _documentRequestRepository.GetOrCreateStatusByNameAsync(CancelledStatusName);
+
+                request.DocumentRequestStatusId = cancelledStatus.DocumentRequestStatusId;
+
+                var history = new DocumentRequestStatusHistory
+                {
+                    DocumentRequestId = request.DocumentRequestId,
+                    StatusId = cancelledStatus.DocumentRequestStatusId,
+                    ChangedByUserId = managerId,
+                    ChangedAt = DateTime.Now,
+                    Notes = "Request cancelled by manager"
+                };
+
+                await _documentRequestRepository.UpdateStatusAsync(request, history);
+
+                _logger.LogInformation("Manager document request cancellation completed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manager document request cancellation failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
                 throw;
             }
         }

@@ -150,6 +150,8 @@ namespace DocLocker.Web.Controllers
 
             if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.Today)
             {
+                // Call out that the request cannot use a past due date.
+                _logger.LogWarning("Document request creation rejected due to past due date. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
                 ModelState.AddModelError(nameof(CreateDocumentRequestDTO.DueDate), "Due date cannot be in the past");
                 return await ReturnMyProjectsWithRequestErrorsAsync(dto);
             }
@@ -184,6 +186,111 @@ namespace DocLocker.Web.Controllers
             }
 
             return RedirectToAction(nameof(MyProjects));
+        }
+
+        // Update a pending document request.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditDocumentRequest(int documentRequestId, UpdateDocumentRequestDTO dto, string? statusFilter)
+        {
+            _logger.LogInformation("Manager submitted document request edit form. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+
+            // Use a simple guard for invalid request ids.
+            if (documentRequestId <= 0)
+            {
+                _logger.LogWarning("Document request edit failed due to invalid request id. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "Invalid document request id.";
+                return RedirectToAction(nameof(Requests), new { status = statusFilter });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Document request edit validation failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "Please correct the highlighted request fields.";
+                return RedirectToAction(nameof(Requests), new { status = statusFilter });
+            }
+
+            if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.Today)
+            {
+                _logger.LogWarning("Document request edit rejected due to past due date. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "Due date cannot be in the past.";
+                return RedirectToAction(nameof(Requests), new { status = statusFilter });
+            }
+
+            if (!TrySetBearerToken(out _))
+            {
+                _logger.LogWarning("Document request edit failed due to missing session token.");
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"api/documentrequests/{documentRequestId}", dto);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Failed to edit document request. DocumentRequestId: {DocumentRequestId}, Status: {StatusCode}", documentRequestId, response.StatusCode);
+                    TempData["Error"] = string.IsNullOrWhiteSpace(errorContent) ? "Unable to edit document request." : errorContent;
+                }
+                else
+                {
+                    _logger.LogInformation("Document request edited successfully. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                    TempData["Success"] = "Document request updated successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing document request. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "An error occurred while editing the document request.";
+            }
+
+            return RedirectToAction(nameof(Requests), new { status = statusFilter });
+        }
+
+        // Cancel a pending document request.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelDocumentRequest(int documentRequestId, string? statusFilter)
+        {
+            _logger.LogInformation("Manager submitted document request cancellation. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+
+            // Use a simple guard for invalid request ids.
+            if (documentRequestId <= 0)
+            {
+                _logger.LogWarning("Document request cancellation failed due to invalid request id. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "Invalid document request id.";
+                return RedirectToAction(nameof(Requests), new { status = statusFilter });
+            }
+
+            if (!TrySetBearerToken(out _))
+            {
+                _logger.LogWarning("Document request cancellation failed due to missing session token.");
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Patch, $"api/documentrequests/{documentRequestId}/cancel");
+                var response = await _httpClient.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Failed to cancel document request. DocumentRequestId: {DocumentRequestId}, Status: {StatusCode}", documentRequestId, response.StatusCode);
+                    TempData["Error"] = string.IsNullOrWhiteSpace(errorContent) ? "Unable to cancel document request." : errorContent;
+                }
+                else
+                {
+                    _logger.LogInformation("Document request cancelled successfully. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                    TempData["Success"] = "Document request cancelled successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cancelling document request. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                TempData["Error"] = "An error occurred while cancelling the document request.";
+            }
+
+            return RedirectToAction(nameof(Requests), new { status = statusFilter });
         }
 
         private async Task<ManagerProjectsViewModel> BuildManagerProjectsViewModelAsync(string managerId)

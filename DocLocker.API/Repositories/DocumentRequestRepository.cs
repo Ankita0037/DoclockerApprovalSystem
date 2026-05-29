@@ -33,6 +33,37 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Find or create a request status by name.
+        public async Task<DocumentRequestStatus> GetOrCreateStatusByNameAsync(string name)
+        {
+            try
+            {
+                var status = await _context.DocumentRequestStatuses
+                    .FirstOrDefaultAsync(status => status.Name == name);
+
+                if (status != null)
+                {
+                    return status;
+                }
+
+                status = new DocumentRequestStatus
+                {
+                    Name = name
+                };
+
+                _context.DocumentRequestStatuses.Add(status);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Document request status created. StatusName: {StatusName}, StatusId: {StatusId}", name, status.DocumentRequestStatusId);
+                return status;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error ensuring document request status exists. StatusName: {StatusName}", name);
+                throw;
+            }
+        }
+
         // Save a new request and its initial status history.
         public async Task<int> CreateAsync(DocumentRequest request, DocumentRequestStatusHistory history)
         {
@@ -53,6 +84,53 @@ namespace DocLocker.API.Repositories
             }
         }
 
+        // Find a request by id for workflow updates.
+        public async Task<DocumentRequest?> GetByIdAsync(int documentRequestId)
+        {
+            try
+            {
+                return await _context.DocumentRequests
+                    .Include(request => request.Status)
+                    .FirstOrDefaultAsync(request => request.DocumentRequestId == documentRequestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving document request. DocumentRequestId: {DocumentRequestId}", documentRequestId);
+                throw;
+            }
+        }
+
+        // Save request field updates.
+        public async Task UpdateAsync(DocumentRequest request)
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Document request updated. DocumentRequestId: {DocumentRequestId}", request.DocumentRequestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating document request. DocumentRequestId: {DocumentRequestId}", request.DocumentRequestId);
+                throw;
+            }
+        }
+
+        // Save a status transition and its history entry.
+        public async Task UpdateStatusAsync(DocumentRequest request, DocumentRequestStatusHistory history)
+        {
+            try
+            {
+                _context.DocumentRequestStatusHistories.Add(history);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Document request status updated. DocumentRequestId: {DocumentRequestId}, StatusId: {StatusId}", request.DocumentRequestId, request.DocumentRequestStatusId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating document request status. DocumentRequestId: {DocumentRequestId}", request.DocumentRequestId);
+                throw;
+            }
+        }
+
         // Return requests created by a manager.
         public async Task<IReadOnlyList<DocumentRequestSummaryDTO>> GetForManagerAsync(int managerId)
         {
@@ -67,6 +145,7 @@ namespace DocLocker.API.Repositories
                         ProjectName = request.Project.Name,
                         MemberName = request.Member.FullName,
                         Title = request.Title,
+                        Description = request.Description,
                         Status = request.Status.Name,
                         DueDate = request.DueDate
                     })

@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "All Requests";
     var currentFilter = Model.StatusFilter ?? string.Empty;
-    var filters = new[] { "Pending", "Submitted", "Approved", "Rejected", "RevisionRequested" };
+    var filters = new[] { "Pending", "Submitted", "Approved", "Rejected", "RevisionRequested", "Cancelled" };
 }
 
 <div class="container-fluid mt-4">
@@ -43,17 +43,42 @@
                                 <th>Title</th>
                                 <th>Status</th>
                                 <th>Due Date</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var request in Model.Requests)
                             {
+                                var isPending = string.Equals(request.Status, "Pending", StringComparison.OrdinalIgnoreCase);
+
                                 <tr>
                                     <td>@request.ProjectName</td>
                                     <td>@request.MemberName</td>
                                     <td>@request.Title</td>
                                     <td>@request.Status</td>
                                     <td>@(request.DueDate?.ToString("d") ?? "-")</td>
+                                    <td class="text-end">
+                                        @if (isPending)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editRequestModal-@request.DocumentRequestId">
+                                                Edit
+                                            </button>
+                                            <form asp-action="CancelDocumentRequest" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="documentRequestId" value="@request.DocumentRequestId" />
+                                                <input type="hidden" name="statusFilter" value="@currentFilter" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this pending request?');">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewRequestModal-@request.DocumentRequestId">
+                                                View
+                                            </button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -63,3 +88,85 @@
         </div>
     </div>
 </div>
+
+@foreach (var request in Model.Requests)
+{
+    var isPending = string.Equals(request.Status, "Pending", StringComparison.OrdinalIgnoreCase);
+
+    if (isPending)
+    {
+        <div class="modal fade" id="editRequestModal-@request.DocumentRequestId" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Request</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form asp-action="EditDocumentRequest" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+                        <div class="modal-body">
+                            <input type="hidden" name="documentRequestId" value="@request.DocumentRequestId" />
+                            <input type="hidden" name="statusFilter" value="@currentFilter" />
+                            <div class="mb-3">
+                                <label class="form-label">Project</label>
+                                <input class="form-control" value="@request.ProjectName" disabled />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Member</label>
+                                <input class="form-control" value="@request.MemberName" disabled />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input class="form-control" name="Title" maxlength="200" value="@request.Title" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="Description" rows="4" maxlength="1000">@request.Description</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Due Date</label>
+                                <input class="form-control" type="date" name="DueDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" value="@(request.DueDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="modal fade" id="viewRequestModal-@request.DocumentRequestId" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">View Request</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Project</dt>
+                            <dd class="col-sm-9">@request.ProjectName</dd>
+                            <dt class="col-sm-3">Member</dt>
+                            <dd class="col-sm-9">@request.MemberName</dd>
+                            <dt class="col-sm-3">Title</dt>
+                            <dd class="col-sm-9">@request.Title</dd>
+                            <dt class="col-sm-3">Description</dt>
+                            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(request.Description) ? "-" : request.Description)</dd>
+                            <dt class="col-sm-3">Status</dt>
+                            <dd class="col-sm-9">@request.Status</dd>
+                            <dt class="col-sm-3">Due Date</dt>
+                            <dd class="col-sm-9">@(request.DueDate?.ToString("d") ?? "-")</dd>
+                        </dl>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
