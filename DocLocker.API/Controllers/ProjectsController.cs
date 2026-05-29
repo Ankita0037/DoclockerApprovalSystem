@@ -26,8 +26,10 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProject(CreateProjectDTO dto)
         {
+            _logger.LogInformation("Admin project creation API called. ManagerId: {ManagerId}", dto.ManagerId);
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Admin project creation failed due to invalid model state. ManagerId: {ManagerId}", dto.ManagerId);
                 return BadRequest(ModelState);
             }
 
@@ -37,21 +39,15 @@ namespace DocLocker.API.Controllers
                 return Unauthorized();
             }
 
-            try
+            var result = await _projectService.CreateProjectAsync(dto, adminId);
+            if (!result.Success)
             {
-                var result = await _projectService.CreateProjectAsync(dto, adminId);
-                if (!result.Success)
-                {
-                    return BadRequest(result.ErrorMessage);
-                }
+                _logger.LogWarning("Admin project creation failed. AdminId: {AdminId}, Error: {Error}", adminId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
 
-                return Ok(new { ProjectId = result.ProjectId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Admin project creation failed.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the project");
-            }
+            _logger.LogInformation("Admin project creation succeeded. AdminId: {AdminId}, ProjectId: {ProjectId}", adminId, result.ProjectId);
+            return Ok(new { ProjectId = result.ProjectId });
         }
 
         // Update project details as admin.
@@ -59,26 +55,22 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateProject(int projectId, UpdateProjectDTO dto)
         {
+            _logger.LogInformation("Admin project update API called. ProjectId: {ProjectId}, ManagerId: {ManagerId}", projectId, dto.ManagerId);
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Admin project update failed due to invalid model state. ProjectId: {ProjectId}", projectId);
                 return BadRequest(ModelState);
             }
 
-            try
+            var result = await _projectService.UpdateProjectAsync(projectId, dto);
+            if (!result.Success)
             {
-                var result = await _projectService.UpdateProjectAsync(projectId, dto);
-                if (!result.Success)
-                {
-                    return BadRequest(result.ErrorMessage);
-                }
+                _logger.LogWarning("Admin project update failed. ProjectId: {ProjectId}, Error: {Error}", projectId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Admin project update failed for project id: {ProjectId}", projectId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the project");
-            }
+            _logger.LogInformation("Admin project update succeeded. ProjectId: {ProjectId}", projectId);
+            return Ok();
         }
 
         // Return all projects for admins.
@@ -86,16 +78,10 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetProjects()
         {
-            try
-            {
-                var projects = await _projectService.GetAllAsync();
-                return Ok(projects);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Admin project list retrieval failed.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching projects");
-            }
+            _logger.LogInformation("Admin project list API called.");
+            var projects = await _projectService.GetAllAsync();
+            _logger.LogInformation("Admin project list retrieval succeeded. Count: {Count}", projects.Count);
+            return Ok(projects);
         }
 
         // Return projects assigned to the manager.
@@ -103,6 +89,7 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetManagerProjects(int managerId)
         {
+            _logger.LogInformation("Manager project list API called. RouteManagerId: {ManagerId}", managerId);
             if (!int.TryParse(User.FindFirstValue("UserId"), out var userId))
             {
                 _logger.LogWarning("Manager project list retrieval failed due to missing user id claim.");
@@ -115,16 +102,9 @@ namespace DocLocker.API.Controllers
                 return Forbid();
             }
 
-            try
-            {
-                var projects = await _projectService.GetForManagerAsync(userId);
-                return Ok(projects);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager project list retrieval failed. ManagerId: {ManagerId}", userId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching projects");
-            }
+            var projects = await _projectService.GetForManagerAsync(userId);
+            _logger.LogInformation("Manager project list retrieval succeeded. ManagerId: {ManagerId}, Count: {Count}", userId, projects.Count);
+            return Ok(projects);
         }
 
         // Return members assigned to a project for managers.
@@ -132,32 +112,28 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetProjectMembers(int projectId)
         {
+            _logger.LogInformation("Manager project members API called. ProjectId: {ProjectId}", projectId);
             if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
             {
                 _logger.LogWarning("Manager project member retrieval failed due to missing user id claim.");
                 return Unauthorized();
             }
 
-            try
+            var result = await _projectService.GetProjectMembersAsync(projectId, managerId);
+            if (!result.Success)
             {
-                var result = await _projectService.GetProjectMembersAsync(projectId, managerId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return Forbid();
-                    }
-
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager project member retrieval forbidden. ManagerId: {ManagerId}, ProjectId: {ProjectId}", managerId, projectId);
+                    return Forbid();
                 }
 
-                return Ok(result.Data);
+                _logger.LogWarning("Manager project member retrieval failed. ProjectId: {ProjectId}, Error: {Error}", projectId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager project member retrieval failed. ProjectId: {ProjectId}", projectId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching project members");
-            }
+
+            _logger.LogInformation("Manager project member retrieval succeeded. ProjectId: {ProjectId}", projectId);
+            return Ok(result.Data);
         }
 
         // Assign a member to a project for managers.
@@ -165,32 +141,28 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> AddProjectMember(int projectId, AssignProjectMemberDTO dto)
         {
+            _logger.LogInformation("Manager project member assignment API called. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, dto.MemberId);
             if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
             {
                 _logger.LogWarning("Manager project member assignment failed due to missing user id claim.");
                 return Unauthorized();
             }
 
-            try
+            var result = await _projectService.AddProjectMemberAsync(projectId, managerId, dto.MemberId);
+            if (!result.Success)
             {
-                var result = await _projectService.AddProjectMemberAsync(projectId, managerId, dto.MemberId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return Forbid();
-                    }
-
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager project member assignment forbidden. ManagerId: {ManagerId}, ProjectId: {ProjectId}", managerId, projectId);
+                    return Forbid();
                 }
 
-                return Ok();
+                _logger.LogWarning("Manager project member assignment failed. ProjectId: {ProjectId}, MemberId: {MemberId}, Error: {Error}", projectId, dto.MemberId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager project member assignment failed. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, dto.MemberId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while assigning project member");
-            }
+
+            _logger.LogInformation("Manager project member assignment succeeded. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, dto.MemberId);
+            return Ok();
         }
 
         // Remove a member from a project for managers.
@@ -198,32 +170,28 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> RemoveProjectMember(int projectId, int memberId)
         {
+            _logger.LogInformation("Manager project member removal API called. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
             if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
             {
                 _logger.LogWarning("Manager project member removal failed due to missing user id claim.");
                 return Unauthorized();
             }
 
-            try
+            var result = await _projectService.RemoveProjectMemberAsync(projectId, managerId, memberId);
+            if (!result.Success)
             {
-                var result = await _projectService.RemoveProjectMemberAsync(projectId, managerId, memberId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return Forbid();
-                    }
-
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager project member removal forbidden. ManagerId: {ManagerId}, ProjectId: {ProjectId}", managerId, projectId);
+                    return Forbid();
                 }
 
-                return Ok();
+                _logger.LogWarning("Manager project member removal failed. ProjectId: {ProjectId}, MemberId: {MemberId}, Error: {Error}", projectId, memberId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager project member removal failed. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while removing project member");
-            }
+
+            _logger.LogInformation("Manager project member removal succeeded. ProjectId: {ProjectId}, MemberId: {MemberId}", projectId, memberId);
+            return Ok();
         }
     }
 }

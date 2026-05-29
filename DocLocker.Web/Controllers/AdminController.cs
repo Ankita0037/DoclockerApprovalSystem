@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using DocLocker.Web.Filters;
 using DocLocker.Core.Models;
 using DocLocker.Web.Models;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -13,8 +14,9 @@ namespace DocLocker.Web.Controllers
         private readonly HttpClient _httpClient;
         private readonly ILogger<AdminController> _logger;
 
-    private bool HasUserManagementAccess()
-        => string.Equals(HttpContext.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
+        // This checks if the current admin can access user management screens.
+        private bool HasUserManagementAccess()
+            => string.Equals(HttpContext.Session.GetString("AllowUserManagement"), "true", StringComparison.OrdinalIgnoreCase);
 
         public AdminController(IHttpClientFactory factory, ILogger<AdminController> logger)
         {
@@ -271,6 +273,12 @@ namespace DocLocker.Web.Controllers
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.GetAsync("api/users");
 
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("User management access forbidden for users list.");
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to load users. Status code: {StatusCode}", response.StatusCode);
@@ -314,6 +322,12 @@ namespace DocLocker.Web.Controllers
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.PostAsJsonAsync("api/users", dto);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("User management access forbidden for user creation.");
+                    return RedirectToAction("AccessDenied", "Account");
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -361,6 +375,12 @@ namespace DocLocker.Web.Controllers
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}", dto);
 
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("User management access forbidden for user update.");
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
@@ -402,6 +422,12 @@ namespace DocLocker.Web.Controllers
                 using var request = new HttpRequestMessage(HttpMethod.Patch, $"api/users/{userId}/activation");
                 request.Content = new StringContent(string.Empty);
                 var response = await _httpClient.SendAsync(request);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("User management access forbidden for activation toggle.");
+                    return RedirectToAction("AccessDenied", "Account");
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {

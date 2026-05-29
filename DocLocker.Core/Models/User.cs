@@ -25,7 +25,11 @@ namespace DocLocker.Core.Models
         public int RoleId { get; set; }
         public Role Role { get; set; }
 
+        // This flag indicates the user can access user management features.
         public bool AllowUserManagement { get; set; } = true;
+
+        // This flag indicates the user is a super admin.
+        public bool IsSuperAdmin { get; set; }
 
         public bool IsActive { get; set; } = true;
 

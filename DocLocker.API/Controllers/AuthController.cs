@@ -29,51 +29,63 @@ namespace DocLocker.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            try
+            _logger.LogInformation("Registration API called. Email: {Email}", dto.Email);
+            if (!ModelState.IsValid)
             {
-                if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                {
-                    _logger.LogWarning("Registration attempt with duplicate email: {Email}", dto.Email);
-                    return BadRequest("Email already exists");
-                }
-
-                var memberRoleId = 3;
-                if (!await _context.Roles.AnyAsync(r => r.RoleId == memberRoleId))
-                    return BadRequest("Member role is not configured");
-
-                var user = new User
-                {
-                    FullName = dto.FullName,
-                    Email = dto.Email,
-                    PhoneNumber = dto.PhoneNumber,
-                    RoleId = memberRoleId,
-                    AllowUserManagement = false,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
-                };
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("User registered successfully: {Email}", dto.Email);
-                return Ok("User registered successfully");
+                _logger.LogWarning("Registration failed due to invalid model state. Email: {Email}", dto.Email);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             {
-                _logger.LogError(ex, "Registration error for email: {Email}", dto.Email);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred during registration");
+                _logger.LogWarning("Registration attempt with duplicate email: {Email}", dto.Email);
+                return BadRequest("Email already exists");
             }
+
+            var memberRoleId = 3;
+            if (!await _context.Roles.AnyAsync(r => r.RoleId == memberRoleId))
+            {
+                _logger.LogWarning("Registration failed due to missing member role.");
+                return BadRequest("Member role is not configured");
+            }
+
+            var user = new User
+            {
+                FullName = dto.FullName,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                RoleId = memberRoleId,
+                AllowUserManagement = false,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User registered successfully. UserId: {UserId}, Email: {Email}", user.UserId, dto.Email);
+            return Ok("User registered successfully");
         }
 
         // Log 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
+            _logger.LogInformation("Login API called. Email: {Email}", dto.Email);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Login failed due to invalid model state. Email: {Email}", dto.Email);
+                return BadRequest(ModelState);
+            }
+
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            {
+                _logger.LogWarning("Login failed due to invalid credentials. Email: {Email}", dto.Email);
                 return Unauthorized("Invalid credentials");
+            }
 
             if (!user.IsActive)
             {
@@ -83,6 +95,8 @@ namespace DocLocker.API.Controllers
 
             var token = GenerateJwtToken(user);
 
+            _logger.LogInformation("Login succeeded. UserId: {UserId}, Email: {Email}", user.UserId, user.Email);
+
             return Ok(new AuthResponseDTO
             {
                 Token = token,
@@ -90,7 +104,8 @@ namespace DocLocker.API.Controllers
                 Email = user.Email,
                 RoleId = user.RoleId,
                 RoleName = user.Role?.Name,
-                AllowUserManagement = user.AllowUserManagement
+                AllowUserManagement = user.AllowUserManagement,
+                IsSuperAdmin = user.IsSuperAdmin
             });
         }
 
@@ -98,11 +113,14 @@ namespace DocLocker.API.Controllers
         private string GenerateJwtToken(User user)
         {
             var roleName = user.Role?.Name ?? string.Empty;
+            // This adds the user management flags to the token for authorization checks.
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Email),
                 new Claim(ClaimTypes.Role, roleName),
-                new Claim("UserId", user.UserId.ToString())
+                new Claim("UserId", user.UserId.ToString()),
+                new Claim("AllowUserManagement", user.AllowUserManagement.ToString()),
+                new Claim("IsSuperAdmin", user.IsSuperAdmin.ToString())
             };
 
             var key = new SymmetricSecurityKey(

@@ -1,6 +1,7 @@
 using DocLocker.API.Data;
 using DocLocker.API.Services;
 using DocLocker.API.Repositories;
+using DocLocker.API.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -89,6 +90,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure middleware pipeline.
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors("AllowWebApp");
 app.UseHttpsRedirection();
 app.UseAuthentication();

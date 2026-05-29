@@ -6,14 +6,17 @@ namespace DocLocker.API.Services
     public class DocumentService : IDocumentService
     {
         private readonly IDocumentRepository _documentRepository;
+        private readonly ILogger<DocumentService> _logger;
 
-        public DocumentService(IDocumentRepository documentRepository)
+        public DocumentService(IDocumentRepository documentRepository, ILogger<DocumentService> logger)
         {
             _documentRepository = documentRepository;
+            _logger = logger;
         }
 
         public async Task<int> UploadAsync(UploadDocumentDTO model, int userId)
         {
+            _logger.LogInformation("Document upload started. DocumentRequestId: {DocumentRequestId}, UserId: {UserId}", model.DocumentRequestId, userId);
             var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
 
             if (!Directory.Exists(folderPath))
@@ -37,12 +40,15 @@ namespace DocLocker.API.Services
                 UploadedByUserId = userId
             };
 
-            return await _documentRepository.AddAsync(document);
+            var documentId = await _documentRepository.AddAsync(document);
+            _logger.LogInformation("Document upload completed. DocumentId: {DocumentId}, UserId: {UserId}", documentId, userId);
+            return documentId;
         }
 
         // Return documents for the selected user.
         public async Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId)
         {
+            _logger.LogInformation("Document list retrieval started. UserId: {UserId}", userId);
             return await _documentRepository.GetByUserIdAsync(userId);
         }
     }

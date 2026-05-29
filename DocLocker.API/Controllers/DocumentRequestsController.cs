@@ -42,29 +42,21 @@ namespace DocLocker.API.Controllers
                 return Unauthorized();
             }
 
-            try
+            var result = await _documentRequestService.CreateAsync(dto, managerId);
+            if (!result.Success)
             {
-                var result = await _documentRequestService.CreateAsync(dto, managerId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _logger.LogWarning("Manager request creation forbidden. ManagerId: {ManagerId}, ProjectId: {ProjectId}", managerId, dto.ProjectId);
-                        return Forbid();
-                    }
-
-                    _logger.LogWarning("Manager request creation failed. ManagerId: {ManagerId}, ProjectId: {ProjectId}, MemberId: {MemberId}, Error: {Error}", managerId, dto.ProjectId, dto.MemberId, result.ErrorMessage);
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager request creation forbidden. ManagerId: {ManagerId}, ProjectId: {ProjectId}", managerId, dto.ProjectId);
+                    return Forbid();
                 }
 
-                _logger.LogInformation("Manager request creation succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, result.DocumentRequestId);
-                return Ok(new { DocumentRequestId = result.DocumentRequestId });
+                _logger.LogWarning("Manager request creation failed. ManagerId: {ManagerId}, ProjectId: {ProjectId}, MemberId: {MemberId}, Error: {Error}", managerId, dto.ProjectId, dto.MemberId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager document request creation failed. ProjectId: {ProjectId}, MemberId: {MemberId}", dto.ProjectId, dto.MemberId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the document request");
-            }
+
+            _logger.LogInformation("Manager request creation succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, result.DocumentRequestId);
+            return Ok(new { DocumentRequestId = result.DocumentRequestId });
         }
 
         // Return document requests created by the manager.
@@ -72,22 +64,16 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetManagerRequests()
         {
+            _logger.LogInformation("Manager request list API called.");
             if (!int.TryParse(User.FindFirstValue("UserId"), out var managerId))
             {
                 _logger.LogWarning("Manager request list retrieval failed due to missing user id claim.");
                 return Unauthorized();
             }
 
-            try
-            {
-                var requests = await _documentRequestService.GetForManagerAsync(managerId);
-                return Ok(requests);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager request list retrieval failed. ManagerId: {ManagerId}", managerId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching requests");
-            }
+            var requests = await _documentRequestService.GetForManagerAsync(managerId);
+            _logger.LogInformation("Manager request list retrieval succeeded. ManagerId: {ManagerId}, Count: {Count}", managerId, requests.Count);
+            return Ok(requests);
         }
 
         // Return document requests assigned to the member.
@@ -95,22 +81,16 @@ namespace DocLocker.API.Controllers
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> GetMemberRequests()
         {
+            _logger.LogInformation("Member request list API called.");
             if (!int.TryParse(User.FindFirstValue("UserId"), out var memberId))
             {
                 _logger.LogWarning("Member request list retrieval failed due to missing user id claim.");
                 return Unauthorized();
             }
 
-            try
-            {
-                var requests = await _documentRequestService.GetForMemberAsync(memberId);
-                return Ok(requests);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Member request list retrieval failed. MemberId: {MemberId}", memberId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while fetching requests");
-            }
+            var requests = await _documentRequestService.GetForMemberAsync(memberId);
+            _logger.LogInformation("Member request list retrieval succeeded. MemberId: {MemberId}, Count: {Count}", memberId, requests.Count);
+            return Ok(requests);
         }
 
         // Update an existing pending document request.
@@ -132,29 +112,21 @@ namespace DocLocker.API.Controllers
                 return Unauthorized();
             }
 
-            try
+            var result = await _documentRequestService.UpdateAsync(documentRequestId, dto, managerId);
+            if (!result.Success)
             {
-                var result = await _documentRequestService.UpdateAsync(documentRequestId, dto, managerId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _logger.LogWarning("Manager request update forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
-                        return Forbid();
-                    }
-
-                    _logger.LogWarning("Manager request update failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager request update forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                    return Forbid();
                 }
 
-                _logger.LogInformation("Manager request update succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
-                return NoContent();
+                _logger.LogWarning("Manager request update failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager document request update failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the document request");
-            }
+
+            _logger.LogInformation("Manager request update succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+            return NoContent();
         }
 
         // Cancel a pending document request without deleting it.
@@ -170,29 +142,21 @@ namespace DocLocker.API.Controllers
                 return Unauthorized();
             }
 
-            try
+            var result = await _documentRequestService.CancelAsync(documentRequestId, managerId);
+            if (!result.Success)
             {
-                var result = await _documentRequestService.CancelAsync(documentRequestId, managerId);
-                if (!result.Success)
+                if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(result.ErrorMessage, "FORBIDDEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _logger.LogWarning("Manager request cancellation forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
-                        return Forbid();
-                    }
-
-                    _logger.LogWarning("Manager request cancellation failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
-                    return BadRequest(result.ErrorMessage);
+                    _logger.LogWarning("Manager request cancellation forbidden. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+                    return Forbid();
                 }
 
-                _logger.LogInformation("Manager request cancellation succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
-                return NoContent();
+                _logger.LogWarning("Manager request cancellation failed. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}, Error: {Error}", managerId, documentRequestId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Manager document request cancellation failed. DocumentRequestId: {DocumentRequestId}", documentRequestId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while cancelling the document request");
-            }
+
+            _logger.LogInformation("Manager request cancellation succeeded. ManagerId: {ManagerId}, DocumentRequestId: {DocumentRequestId}", managerId, documentRequestId);
+            return NoContent();
         }
 
         // Deleting document requests is intentionally not supported.

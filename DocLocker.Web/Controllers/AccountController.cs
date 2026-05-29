@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using DocLocker.Core.Models;
 
 public class AccountController : Controller
@@ -118,14 +119,22 @@ public class AccountController : Controller
                     return View(model);
                 }
 
+                // This reads role and permissions from the JWT so the UI matches API authorization.
                 var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+                var roleClaim = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value;
+                var allowUserManagementClaim = token.Claims.FirstOrDefault(c => c.Type == "AllowUserManagement")?.Value;
+                var allowUserManagement = bool.TryParse(allowUserManagementClaim, out var allowValue) && allowValue;
+                // This reads the super admin flag from the token for UI authorization.
+                var isSuperAdminClaim = token.Claims.FirstOrDefault(c => c.Type == "IsSuperAdmin")?.Value;
+                var isSuperAdmin = bool.TryParse(isSuperAdminClaim, out var superValue) && superValue;
 
                 // Store in session
                 HttpContext.Session.SetString("Token", result.Token);
-                HttpContext.Session.SetString("Role", result.RoleName ?? string.Empty);
+                HttpContext.Session.SetString("Role", roleClaim ?? result.RoleName ?? string.Empty);
                 HttpContext.Session.SetString("FullName", result.FullName);
                 HttpContext.Session.SetString("Email", result.Email);
-                HttpContext.Session.SetString("AllowUserManagement", result.AllowUserManagement.ToString().ToLowerInvariant());
+                HttpContext.Session.SetString("AllowUserManagement", allowUserManagement.ToString().ToLowerInvariant());
+                HttpContext.Session.SetString("IsSuperAdmin", isSuperAdmin.ToString().ToLowerInvariant());
                 if (!string.IsNullOrEmpty(userIdClaim))
                 {
                     HttpContext.Session.SetString("UserId", userIdClaim);

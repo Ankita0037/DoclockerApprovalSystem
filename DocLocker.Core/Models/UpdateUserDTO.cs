@@ -16,5 +16,7 @@ namespace DocLocker.Core.Models
         public int RoleId { get; set; }
 
         public bool AllowUserManagement { get; set; }
+
+        public bool IsSuperAdmin { get; set; }
     }
 }

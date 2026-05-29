@@ -8,5 +8,6 @@
         public int RoleId { get; set; }
         public string RoleName { get; set; }
         public bool AllowUserManagement { get; set; }
+        public bool IsSuperAdmin { get; set; }
     }
 }
